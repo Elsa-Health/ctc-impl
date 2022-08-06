@@ -1,26 +1,40 @@
 {
-  "name": "ctc",
-  "version": "0.0.0",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
-  },
-  "devDependencies": {
-    "eslint-config-custom": "*",
-    "prettier": "latest",
-    "turbo": "latest"
-  },
-  "engines": {
-    "npm": ">=7.0.0",
-    "node": ">=14.0.0"
-  },
-  "dependencies": {},
-  "packageManager": "yarn@1.22.18"
+	"name": "ctc",
+	"version": "0.0.0",
+	"private": true,
+	"workspaces": {
+		"packages": [
+			"apps/*",
+			"packages/*"
+		],
+		"nohoist": [
+			"**/mobile-ctc/",
+			"**/mobile-ctc/**",
+			"**/tiny-invariant/",
+			"**/tiny-invariant/**",
+			"**/@elsa-health/emr/",
+			"**/@elsa-health/emr/**",
+			"**/dotenv/",
+			"**/zod/",
+			"**/elsa-ctc-web/",
+			"**/elsa-ctc-web/**"
+		]
+	},
+	"scripts": {
+		"build": "turbo run build",
+		"dev": "turbo run dev --parallel",
+		"lint": "turbo run lint",
+		"format": "prettier --write \"**/*.{ts,tsx,md}\""
+	},
+	"devDependencies": {
+		"eslint-config-custom": "*",
+		"prettier": "latest",
+		"turbo": "latest"
+	},
+	"engines": {
+		"npm": ">=7.0.0",
+		"node": ">=14.0.0"
+	},
+	"dependencies": {},
+	"packageManager": "yarn@1.22.18"
 }
