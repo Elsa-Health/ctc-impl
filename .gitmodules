@@ -1,0 +1,6 @@
+[submodule "packages/emr"]
+	path = packages/emr
+	url = git@github.com:Elsa-Health/emr-impl.git
+[submodule "apps/dacc-server"]
+	path = apps/dacc-server
+	url = git@github.com:Elsa-Health/dacc-server-impl.git
