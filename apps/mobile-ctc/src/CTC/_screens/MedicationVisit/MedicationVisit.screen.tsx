@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {ARVMedication} from '@elsa-health/emr/lib/ctc/ctc.types';
 import {WorkflowScreenProps} from '@elsa-ui/react-native-workflows';
 import {Layout, Text} from '@elsa-ui/react-native/components';
@@ -13,6 +14,7 @@ import Collapsible from 'react-native-collapsible';
 import {
   Button,
   Checkbox,
+  Chip,
   HelperText,
   RadioButton,
   TouchableRipple,
@@ -20,14 +22,12 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useAsyncRetry} from 'react-use';
 import {UseAppointments, UseStockData} from '../../emr/react-hooks';
-import {patient} from '../../storage/migration-v0-v1';
 import {
   Block,
   Column,
   ControlDateInput,
   Item,
   MultiSelect,
-  Picker,
   Row,
   Section,
   TitledItem,
@@ -35,30 +35,154 @@ import {
 
 const ion = (p: [string, string][]) => p.map(([k, v]) => ({id: k, name: v}));
 
-export type MedicationRequestVisitData = {
-  // regimenDecision: string;
-  // decisionReason: CTC.Status;
-  arvRegimens: ARVMedication[];
-  regimenDuration: DurationOpt;
-  medications: Medication.All[];
-  appointmentDate: string;
-  investigations: Investigation[];
-  dateOfVisit: DDMMYYYYDateString;
-  appointmentId: null | string;
-  visitType: 'home' | 'community';
-};
+import {
+  ARVStockRecord,
+  SimpleVisitData as MedicationRequestVisitData,
+} from '@elsa-health/emr/lib/ctc/ctc';
+import {
+  StockedMedicationList,
+  useStockedMedication,
+} from '../../component/stocked-medication-list';
+import {CollectionNode} from 'papai/collection/core';
+import produce from 'immer';
 
-export type DurationOpt = '30-days' | '60-days' | '90-days';
-const durationOptions: Array<{value: DurationOpt; text: string}> = [
+// export type MedicationRequestVisitData = {
+//   // regimenDecision: string;
+//   // decisionReason: CTC.Status;
+//   arvRegimens: ARVMedication[];
+//   regimenDuration: DurationOpt;
+//   medications: Medication.All[];
+//   appointmentDate: string;
+//   investigations: Investigation[];
+//   dateOfVisit: DDMMYYYYDateString;
+//   appointmentId: null | string;
+//   visitType: 'home' | 'community' | 'clinic';
+// };
+
+// export type DurationOpt = '30-days' | '60-days' | '90-days';
+const durationOptions: Array<{
+  value: MedicationRequestVisitData['regimenDuration'];
+  text: string;
+}> = [
   {value: '30-days', text: '30 days'},
   {value: '60-days', text: '60 days'},
   {value: '90-days', text: '90 days'},
 ];
 
+const ARVMedicationItemList = React.memo(
+  ({
+    show,
+    dismiss,
+    collection,
+    selected = [],
+    onSelectedItems,
+  }: {
+    show: boolean;
+    dismiss: () => void;
+    // selected: any[];
+    onSelectedItems: (items: any[]) => void;
+    collection: () => CollectionNode<any>;
+  }) => {
+    // const [selected, select] = React.useState<ARVStockRecord[]>([])
+    const alreadySelected = useStockedMedication(s => s.selected);
+    // const select = useStockedMedication(
+    //   React.useCallback(s => s.setSelected, []),
+    // );
+    const select = useStockedMedication.getState().setSelected;
+
+    console.log('###');
+    React.useEffect(() => {
+      console.log('XYZ');
+      useStockedMedication.getState().setSelected(selected);
+    }, []);
+
+    // React.useEffect(() => {
+    //   console.log({onSelectedItems});
+    // }, [onSelectedItems]);
+    React.useEffect(() => {
+      const sub = useStockedMedication.subscribe(s => {
+        // console.log('$$$', s);
+        onSelectedItems(s.selected.map(x => x.medication));
+      });
+
+      return () => sub();
+    }, [onSelectedItems]);
+
+    const pressItem = React.useCallback(
+      item =>
+        select(x =>
+          produce(x, df => {
+            const idx = df
+              .map(s => s.medication.identifier)
+              .findIndex(sd => sd === item.medication.identifier);
+            if (idx > -1) {
+              // remove
+              df.splice(idx, 1);
+            } else {
+              // add
+              df.push(item);
+            }
+          }),
+        ),
+      [select],
+    );
+
+    const checkRule = React.useCallback(
+      (item, sx) =>
+        sx
+          .map(s => s.medication.identifier)
+          .includes(item.medication.identifier),
+      [],
+    );
+
+    const renderItem = React.useCallback(
+      (item: ARVStockRecord, ix) => (
+        <Chip
+          closeIcon={() => <Icon name="close" size={16} />}
+          style={{marginRight: 6, marginBottom: 6, height: 38}}
+          onPress={() => pressItem(item)}
+          onClose={() => pressItem(item)}
+          key={ix}>
+          {item.medication.text}
+        </Chip>
+      ),
+      [],
+    );
+    // const [selected, selectedItem] = Reac
+    return (
+      <View
+        style={{
+          height: 'auto',
+          flex: 1,
+        }}>
+        <StockedMedicationList
+          stockCollectionNode={collection()}
+          show={show}
+          dismiss={dismiss}
+          // see
+          itemSelectionRule={checkRule}
+          onPressItem={pressItem}
+        />
+        <Row
+          spaceTop
+          contentStyle={{
+            justifyContent: 'flex-start',
+            flex: 1,
+            flexWrap: 'wrap',
+            height: 'auto',
+          }}>
+          {alreadySelected.map(renderItem)}
+        </Row>
+      </View>
+    );
+  },
+);
+
 export default function MedicationVisitScreen<
   Patient extends {id: string},
   Visit,
   Org,
+  CN extends CollectionNode<any> = CollectionNode<any>,
 >({
   entry: e,
   actions: $,
@@ -76,11 +200,11 @@ export default function MedicationVisitScreen<
       organization: Org,
       visit: Visit | null,
     ) => void;
-    fetchMedications: () => Promise<UseStockData['medications']>;
     fetchAppointments: (
       patientId: string,
     ) => Promise<UseAppointments['appointments']>;
     onDiscard: () => void;
+    getStockCollectionNode: () => CN;
   }
 >) {
   const {spacing} = useTheme();
@@ -111,14 +235,16 @@ export default function MedicationVisitScreen<
     () => $.fetchAppointments(e.patient.id),
     [e.patient],
   );
-  const {value: medications} = useAsyncRetry(async () => {
-    const s = await $.fetchMedications();
-    const out = Object.fromEntries(
-      s.map(d => [d.id ?? d.identifier, d] as [string, typeof d]),
-    );
-    return out;
-  }, []);
+  // const {value: medications} = useAsyncRetry(async () => {
+  //   const s = await $.fetchMedications();
+  //   const out = Object.fromEntries(
+  //     s.map(d => [d.id ?? d.identifier, d] as [string, typeof d]),
+  //   );
+  //   return out;
+  // }, []);
 
+  const [show, setShow] = React.useState(false);
+  const dismiss = React.useCallback(() => setShow(false), []);
   return (
     <Layout
       title={notEdit ? 'Patient Visit' : 'Edit Patient Visit'}
@@ -172,8 +298,8 @@ export default function MedicationVisitScreen<
         </Section>
 
         <Section
-          title="Type of patient visit?"
-          desc="Is this a home visit or a community visit?"
+          title="Type of patient visit"
+          desc="Where is the visit taking place?"
           spaceTop
           removeLine>
           <Controller
@@ -184,8 +310,9 @@ export default function MedicationVisitScreen<
                 <RadioButton.Group
                   value={field.value}
                   onValueChange={field.onChange}>
-                  <View style={{flexDirection: 'row'}}>
+                  <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
                     <RadioButton.Item label="Home" value="home" />
+                    <RadioButton.Item label="Clinic" value="clinic" />
                     <RadioButton.Item label="Community" value="community" />
                   </View>
                 </RadioButton.Group>
@@ -280,74 +407,59 @@ export default function MedicationVisitScreen<
         )}
 
         {/* Make ARV medication request */}
-        {medications === undefined ? (
-          <Text>Loading medications...</Text>
-        ) : (
-          <Section
-            spaceTop
-            title="ARV Medication"
-            desc="Select regimens that apply">
-            <Column spaceTop>
-              <Controller
-                control={control}
-                name="arvRegimens"
-                render={({field}) => (
-                  <MultiSelect
-                    confirmText={'Confirm'}
-                    items={[
-                      {
-                        name: 'ARV Regimens',
-                        id: 1,
-                        children: List(Object.entries(medications ?? {}))
-                          .map(([id, obj]) => ({
-                            id,
-                            name: obj.text,
-                          }))
-                          .sortBy(d => d.name)
-                          .toArray(),
-                      },
-                    ]}
-                    uniqueKey="id"
-                    searchPlaceholderText={'Search ARV Regimen'}
-                    selectText={'Select if any'}
-                    onSelectedItemsChange={ids =>
-                      field.onChange(ids.map(idx => (medications || {})[idx]))
-                    }
-                    selectedItems={field.value.map(d => d.id ?? d.identifier)}
+        <Section
+          spaceTop
+          title="ARV Medication"
+          desc="Select regimens that apply">
+          <Column spaceTop>
+            <Button mode="outlined" icon="pill" onPress={() => setShow(true)}>
+              Show Medication List
+            </Button>
+            <Controller
+              control={control}
+              name="arvRegimens"
+              render={({field: {onChange}}) => {
+                return (
+                  <ARVMedicationItemList
+                    // selected={field.value}
+                    onSelectedItems={onChange}
+                    show={show}
+                    dismiss={dismiss}
+                    collection={$.getStockCollectionNode}
                   />
-                )}
-              />
-            </Column>
+                );
+              }}
+            />
+          </Column>
 
-            <Column spaceTop>
-              <Text font="medium">Duration of the selected ARVs</Text>
-              <Controller
-                control={control}
-                name="regimenDuration"
-                render={({field}) => (
-                  <RadioButton.Group
-                    value={field.value}
-                    onValueChange={field.onChange}>
-                    <Row
-                      spaceTop
-                      contentStyle={{
-                        flexWrap: 'wrap',
-                        justifyContent: 'flex-start',
-                      }}>
-                      {durationOptions.map(({value, text}) => (
-                        <RadioButton.Item
-                          label={text}
-                          key={value}
-                          value={value}
-                        />
-                      ))}
-                    </Row>
-                  </RadioButton.Group>
-                )}
-              />
-            </Column>
-          </Section>
-        )}
+          <Column spaceTop>
+            <Text font="medium">Duration of the selected ARVs</Text>
+            <Controller
+              control={control}
+              name="regimenDuration"
+              render={({field}) => (
+                <RadioButton.Group
+                  value={field.value}
+                  onValueChange={field.onChange}>
+                  <Row
+                    spaceTop
+                    contentStyle={{
+                      flexWrap: 'wrap',
+                      justifyContent: 'flex-start',
+                    }}>
+                    {durationOptions.map(({value, text}) => (
+                      <RadioButton.Item
+                        label={text}
+                        key={value}
+                        value={value}
+                      />
+                    ))}
+                  </Row>
+                </RadioButton.Group>
+              )}
+            />
+          </Column>
+        </Section>
 
         {/* Other Medication */}
 
@@ -427,6 +539,9 @@ export default function MedicationVisitScreen<
             <ControlDateInput
               name="appointmentDate"
               control={control}
+              dateTimeProps={{
+                minDate: new Date(),
+              }}
               required
             />
           </Column>

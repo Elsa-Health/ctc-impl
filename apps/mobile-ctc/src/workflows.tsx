@@ -1,10 +1,14 @@
 import React from 'react';
 
 import create from 'zustand';
-import createContext from 'zustand/context';
+// import createContext from 'zustand/context';
 import produce from 'immer';
 
-import {WorkflowScreenProps} from '@elsa-ui/react-native-workflows';
+import {
+  WorkflowScreenProps,
+  FunctionListMap,
+  StateMap,
+} from '@elsa-ui/react-native-workflows';
 
 /** ------- */
 
@@ -54,6 +58,40 @@ type WorkflowStore<V extends KeyValue = KeyValue> = {
 //         }),
 //       ),
 //   }));
+
+/**
+ * Adds contextual information to the screen
+ * attached to the flow
+ * @param WfScreen
+ * @param config
+ * @returns
+ */
+export const withFlowContext =
+  <T extends StateMap, A extends FunctionListMap>(
+    WfScreen: (wfsp: WorkflowScreenProps<T, A>) => JSX.Element,
+    config: {
+      entry?: T;
+      actions?: ({navigation}: {navigation: NavigationProp<any>}) => A;
+    } = {},
+  ) =>
+  ({
+    navigation,
+    route,
+  }: {
+    navigation: NavigationProp<any>;
+    route?: RouteProp<any>;
+  }) => {
+    const entryData = React.useMemo(
+      () => ({...config.entry, ...(route?.params || {})}),
+      [config.entry, route?.params],
+    );
+    return (
+      <WfScreen
+        entry={(entryData ?? {}) as T}
+        actions={config.actions?.({navigation}) ?? ({} as A)}
+      />
+    );
+  };
 
 // create context of the application
 // const {Provider, useStore: useWorkflowStore} = createContext<WorkflowStore>();

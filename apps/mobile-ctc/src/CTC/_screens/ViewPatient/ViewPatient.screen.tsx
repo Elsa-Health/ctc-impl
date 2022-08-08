@@ -3,7 +3,14 @@ import React from 'react';
 import {Layout, Text} from '@elsa-ui/react-native/components';
 import {useTheme} from '@elsa-ui/react-native/theme';
 import {ScrollView, ToastAndroid, View} from 'react-native';
-import {Block, Column, Row, Section, TitledItem} from '../../temp-components';
+import {
+  Block,
+  Column,
+  Item,
+  Row,
+  Section,
+  TitledItem,
+} from '../../temp-components';
 import {WorkflowScreenProps} from '@elsa-ui/react-native-workflows';
 import {Patient} from '../../../emr-types/v1/personnel';
 import {
@@ -34,7 +41,7 @@ export type InvestigationRequestItem = {
 export type NextAppointmentItem = {
   appointmentDate: string;
 };
-export default function ViewPatientScreen({
+export default function ViewPatientScreen<CTCPatient>({
   entry: e,
   actions: $,
 }: WorkflowScreenProps<
@@ -46,16 +53,18 @@ export default function ViewPatientScreen({
     onToEditPatient: (patient: CTCPatient) => void;
     nextAppointment: (patientId: string) => Promise<null | NextAppointmentItem>;
     fetchVisits: (patientId: string) => Promise<VisitItem[]>;
+    onNewVisit: (patient: CTCPatient) => void;
     fetchInvestigationRequests: (
       patientId: string,
     ) => Promise<InvestigationRequestItem[]>;
   }
 >) {
   const {spacing} = useTheme();
-  const name =
+  const name = (
     (e.patient.info?.firstName ?? '') +
     ' ' +
-    (e.patient.info?.familyName ?? '');
+    (e.patient.info?.familyName ?? '')
+  ).trim();
 
   const {value} = useAsync(async () => {
     return $.nextAppointment(e.patient.id);
@@ -86,12 +95,20 @@ export default function ViewPatientScreen({
           <Column>
             <TitledItem title="ID">{e.patient.id}</TitledItem>
             <TitledItem spaceTop title="Name">
-              {name.length === 0 ? name : 'N/A'}
+              {name.length > 0 ? name : 'N/A'}
             </TitledItem>
             <TitledItem spaceTop title="Managing Facility">
               {e.patient.managingOrganization?.name ?? '-'} (
               {e.patient.managingOrganization?.identifier?.ctcCode ?? 'N/A'})
             </TitledItem>
+          </Column>
+          <Column spaceTop>
+            <Button
+              icon={'account-edit'}
+              mode="outlined"
+              onPress={() => $.onToEditPatient(e.patient)}>
+              Edit Profile
+            </Button>
           </Column>
         </Section>
         {/* Next expected appointment */}
@@ -106,6 +123,16 @@ export default function ViewPatientScreen({
             </View>
           </Section>
         )}
+
+        <Item spaceTop>
+          <Button
+            icon={'file-plus'}
+            mode="contained"
+            onPress={() => $.onNewVisit(e.patient)}>
+            New Visit
+          </Button>
+        </Item>
+
         {/* Recent Investigation Requests */}
         <InvestigationRequests
           fetch={() => $.fetchInvestigationRequests(e.patient.id)}
@@ -146,7 +173,7 @@ function InvestigationRequests({
 }) {
   const {loading, error, retry, value} = useAsyncRetry(fetch, [fetch]);
 
-  console.log(value);
+  // console.log(value);
   if (loading) {
     return (
       <View style={{marginVertical: 8, paddingVertical: 8}}>
@@ -189,10 +216,10 @@ function InvestigationRequests({
         </Text>
       )}
       {value.map((hist, ix) => (
-        <>
-          <InvRequestItem key={ix} hist={hist} />
+        <React.Fragment key={ix}>
+          <InvRequestItem hist={hist} />
           <Divider />
-        </>
+        </React.Fragment>
       ))}
     </Section>
   );
@@ -248,10 +275,10 @@ function HistorySection({
         </Text>
       )}
       {value.map((visit, ix) => (
-        <>
-          <HistoryItem key={ix} visit={visit} />
+        <React.Fragment key={ix}>
+          <HistoryItem visit={visit} />
           <Divider />
-        </>
+        </React.Fragment>
       ))}
     </Section>
   );

@@ -10,6 +10,8 @@ import {MedicaDisp} from '../../emr/hook';
 import {useAsyncRetry} from 'react-use';
 import {List} from 'immutable';
 import {format} from 'date-fns';
+import {ctc} from '@elsa-health/emr';
+import {FlashList} from '@shopify/flash-list';
 
 export default function MedicationDispenseScreen({
   actions: $,
@@ -22,10 +24,18 @@ export default function MedicationDispenseScreen({
     return List(await $.getMedicationDispenses());
   });
 
+  if (error) {
+    return (
+      <View style={{flex: 1, padding: spacing.md}}>
+        <Text>Unable to load the responded medication requests</Text>
+      </View>
+    );
+  }
+
   return (
     <Layout title="Medication Dispenses" style={{padding: 0}}>
       {loading && (
-        <View style={{flex: 1}}>
+        <View style={{flex: 1, padding: spacing.md}}>
           <Text>Loading...</Text>
         </View>
       )}
@@ -43,7 +53,13 @@ export default function MedicationDispenseScreen({
               </Button>
             }>
             {value.count() > 0 ? (
-              value.map(dis => <MedicationResponseItem response={dis} />)
+              <FlashList
+                data={value.toArray()}
+                estimatedItemSize={10}
+                renderItem={({item}) => (
+                  <MedicationResponseItem response={item} />
+                )}
+              />
             ) : (
               <View style={{flex: 1}}>
                 <Text style={{textAlign: 'center'}} italic>
@@ -58,26 +74,31 @@ export default function MedicationDispenseScreen({
   );
 }
 
-function MedicationResponseItem({response}: {response: MedicaDisp}) {
+function MedicationResponseItem({
+  response,
+}: {
+  response: ctc.MedicationDispense;
+}) {
   return (
-    <View>
+    <View style={{minHeight: 40}}>
       <View style={{paddingVertical: 10}}>
         <Text size={'xs'} color="#777">
           {response.id}
         </Text>
         <TitledItem title="Medication">
-          {response.medication.data.regimen} (
-          {response.medication.data.className})
+          {response.medication.text} ({response.medication.form})
         </TitledItem>
 
-        <Row contentStyle={{justifyContent: 'flex-start'}}>
+        <Row spaceTop contentStyle={{justifyContent: 'flex-start'}}>
           <TitledItem title="Associated Facility" style={{marginRight: 8}}>
             {response.supplier?.organization.data.ctcCode}
           </TitledItem>
-          <TitledItem title="Supplied By">{response.supplier?.name}</TitledItem>
+          <TitledItem title="Supplied By">
+            {response.supplier?.name ?? `ID: response.supplier?.id`}
+          </TitledItem>
         </Row>
 
-        <Row contentStyle={{justifyContent: 'flex-start'}}>
+        <Row spaceTop contentStyle={{justifyContent: 'flex-start'}}>
           <TitledItem title="Responded At">
             {format(new Date(response.createdAt), 'MMMM dd, yyyy')}
           </TitledItem>

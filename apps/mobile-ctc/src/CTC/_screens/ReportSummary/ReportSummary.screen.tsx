@@ -61,7 +61,6 @@ import {subDays, subWeeks, subMonths, subYears} from 'date-fns';
 import {useWorkflowStore} from '../../workflow';
 import {List} from 'immutable';
 import {groupByFn} from '../MedicationStock/helpers';
-import {ARV} from 'elsa-health-data-fns/lib';
 
 const now = () => new Date();
 const date = (dateStr: string) => new Date(dateStr);
@@ -74,7 +73,7 @@ export default function ReportSummaryScreen({}: WorkflowScreenProps<
 
   const apptx = useWorkflowStore(s => s.value.appointments);
   const data = useWorkflowStore(s =>
-    R.pick(['visits', 'patients', 'inv.reqs', 'medication-requests'], s.value),
+    R.pick(['visits', 'patients', 'inv.reqs', 'med.requests'], s.value),
   );
 
   const brief = React.useMemo(() => {
@@ -88,20 +87,21 @@ export default function ReportSummaryScreen({}: WorkflowScreenProps<
         .toArray(),
 
       top3RequestedMedication: groupByFn(
-        (data['medication-requests'] ?? List()).toArray(),
+        (data['med.requests'] ?? List()).toArray(),
         ({medication}) =>
-          medication.resourceType === 'Medication'
-            ? medication.name
-            : 'unknown',
+          medication.resourceItemType === 'Medication'
+            ? medication.identifier
+            : '<unknown>',
       )
         .map(([id, req]) => {
-          return {id, length: req.length};
+          return {id, requestCount: req.length};
         })
-        .sortBy(d => d.length)
-        .filter(({id}) => ARV.regimen.fromKey(id) !== undefined)
-        .slice(0, 3),
+        .sortBy(d => -d.requestCount)
+        .filter(s => s.id !== '<unknown>')
+        .slice(0, 3)
+        .toArray(),
     };
-  }, [data.visits, data['medication-requests']]);
+  }, [data.visits, data['med.requests']]);
   const appointments = React.useMemo(
     () =>
       apptx?.filter(d => (date_ ? isAfter(date(d.createdAt), date_) : true)) ??
@@ -216,24 +216,42 @@ export default function ReportSummaryScreen({}: WorkflowScreenProps<
             ))}
           </Row>
         </Section>
-        <Section spaceTop title="Top 3 medications requested">
-          {brief.top3RequestedMedication.map(([id, name, count]) => {
-            return (
-              <Row key={id} wrapperStyle={{marginVertical: 4}}>
-                <Text>{name}</Text>
-                <Text>{count}</Text>
-              </Row>
-            );
-          })}
-        </Section>
-
+        <CollapsibleSection
+          title="Top 3 medications requested"
+          desc="Show the top requested medications"
+          removeLine>
+          {brief.top3RequestedMedication.length > 0 ? (
+            <View>
+              {brief.top3RequestedMedication.map(({id, requestCount}, idx) => {
+                return (
+                  <React.Fragment key={idx}>
+                    <Divider />
+                    <View style={{paddingVertical: 12}}>
+                      <TitledItem title="Medication ID">{id}</TitledItem>
+                      <TitledItem title="Count">{requestCount}</TitledItem>
+                      {/* <TitledItem spaceTop title="Last visit">
+                        {formatDistanceToNow(new Date(visit.visitDate))} ago
+                      </TitledItem> */}
+                    </View>
+                  </React.Fragment>
+                );
+              })}
+            </View>
+          ) : (
+            <View>
+              <Text style={{textAlign: 'center'}} italic>
+                There's currently nothing to show here.
+              </Text>
+            </View>
+          )}
+        </CollapsibleSection>
         <CollapsibleSection
           title="Recent Visit"
           desc="Shows the recent visit activity"
           removeLine>
           {brief.recentVisits.length > 0 ? (
             <View>
-              {brief.recentVisits.map((visit, idx) => {
+              {brief.recentVisits.slice(0, 5).map((visit, idx) => {
                 return (
                   <React.Fragment key={idx}>
                     <Divider />
@@ -241,7 +259,7 @@ export default function ReportSummaryScreen({}: WorkflowScreenProps<
                       <TitledItem title="Patient ID">
                         {visit.patient}
                       </TitledItem>
-                      <TitledItem spaceTop title="Last visit">
+                      <TitledItem spaceTop title="Visit date">
                         {formatDistanceToNow(new Date(visit.visitDate))} ago
                       </TitledItem>
                     </View>

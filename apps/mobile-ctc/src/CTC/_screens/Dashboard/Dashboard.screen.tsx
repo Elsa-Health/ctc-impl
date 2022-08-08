@@ -160,6 +160,16 @@ export default function DashboardScreen({
           {/* Others */}
           <Section removeLine title="More" desc="What else you can do">
             <Column>
+              <TouchableItem onPress={$.onViewMedications}>
+                <Row icon="account-group-outline">
+                  <Text>Medication Information</Text>
+                  <Icon
+                    name="arrow-right"
+                    color={color.primary.base}
+                    size={24}
+                  />
+                </Row>
+              </TouchableItem>
               <TouchableItem spaceTop onPress={$.onReportMissedAppointment}>
                 <Row icon="call-missed">
                   <Text>Report Missed Appointment</Text>

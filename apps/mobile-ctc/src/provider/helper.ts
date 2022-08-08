@@ -6,14 +6,14 @@ export const session = (
     | {type: 'default' | 'short'}
     | {type: 'custom'; expiresAt: Date; expiresIn?: number} = {type: 'default'},
 ): ProviderSession => {
-  if (opt['type'] === 'custom') {
+  if (opt.type === 'custom') {
     return {
       expiresAt: opt.expiresAt,
       expiresIn: opt.expiresIn || 86400,
     };
   }
 
-  if (opt['type'] === 'short') {
+  if (opt.type === 'short') {
     return {
       expiresAt: addWeeks(new Date(), 1),
       expiresIn: hoursToSeconds(8),

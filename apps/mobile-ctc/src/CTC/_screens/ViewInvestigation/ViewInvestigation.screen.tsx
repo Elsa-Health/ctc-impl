@@ -41,6 +41,7 @@ type InvestigationProps = {
   id: string;
   shape: InvestigationTypeRecord<string>;
   identifier: string;
+  lastUpdatedAt: Date | null;
   value: any;
   createdAt: Date;
 };
@@ -137,14 +138,16 @@ export default function ViewInvestigationScreen<Request>({
                 value?.length === 0 ? (
                   <Text>Nothing here</Text>
                 ) : (
-                  value?.map(d => (
-                    <React.Fragment key={d.id}>
+                  <FlashList
+                    data={value ?? []}
+                    estimatedItemSize={30}
+                    renderItem={({item: d}) => (
                       <InvestigationResultItem
                         props={{...d}}
                         onPress={() => update(d)}
                       />
-                    </React.Fragment>
-                  ))
+                    )}
+                  />
                 )
               }
             </ErrLoading>
@@ -171,8 +174,15 @@ export default function ViewInvestigationScreen<Request>({
                 )}
                 {formValue.createdAt && (
                   <Column spaceTop>
-                    <TitledItem title="Created at">
-                      {readableDate(new Date())}
+                    <TitledItem title="Created">
+                      {readableDate(formValue.createdAt)}
+                    </TitledItem>
+                  </Column>
+                )}
+                {(formValue.lastUpdatedAt ?? null) !== null && (
+                  <Column spaceTop>
+                    <TitledItem title="Updated">
+                      {readableDate(formValue.lastUpdatedAt)}
                     </TitledItem>
                   </Column>
                 )}
@@ -199,13 +209,14 @@ export default function ViewInvestigationScreen<Request>({
 
 import * as R from 'ramda';
 import {date} from '@elsa-health/emr/lib/utils';
+import {FlashList} from '@shopify/flash-list';
 
 const readableDate = R.pipe(
   date,
   R.ifElse(
     d => differenceInHours(d, new Date()) < 48,
-    d => formatDistanceToNow(d),
-    d => format(d, 'MMMM dd, yyyy'),
+    d => `${formatDistanceToNow(d)} ago`,
+    d => `on ${format(d, 'MMMM dd, yyyy')}`,
   ),
 );
 
@@ -216,18 +227,41 @@ function InvestigationResultItem({
   props: InvestigationProps;
   onPress: () => void;
 }) {
+  const out = React.useMemo(
+    () =>
+      typeof props.value === 'object'
+        ? Object.entries(props.value ?? {})
+        : props.value,
+    [props.value],
+  );
   return (
     <TouchableItem onPress={onPress} spaceBottom>
-      <Row>
-        <TitledItem title="Result" spaceTop>
-          {(props.value ?? null) !== null
-            ? JSON.stringify(props.value ?? '-')
-            : 'N/A'}
+      <TitledItem title="Recorded">{readableDate(props.createdAt)}</TitledItem>
+      {props.lastUpdatedAt !== null && (
+        <TitledItem spaceTop title="Updated">
+          {readableDate(props.lastUpdatedAt)}
         </TitledItem>
-        <TitledItem title="Recorded">
-          {readableDate(props.createdAt)}
-        </TitledItem>
-      </Row>
+      )}
+      <Column spaceTop>
+        <Text font="bold" size={'sm'} color={'#4665af'}>
+          Results
+        </Text>
+        <Column>
+          {Array.isArray(out) && out.length > 0 ? (
+            out
+              .filter(x => Boolean(x[1]))
+              .map(([title, value], ix) => (
+                <React.Fragment key={ix}>
+                  <TitledItem title={title} spaceTop>
+                    {(props.value ?? null) !== null ? value : 'N/A'}
+                  </TitledItem>
+                </React.Fragment>
+              ))
+          ) : (
+            <Text>{props.value}</Text>
+          )}
+        </Column>
+      </Column>
     </TouchableItem>
   );
 }

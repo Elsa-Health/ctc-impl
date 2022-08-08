@@ -100,6 +100,9 @@ async function clear() {
 
   // Making sure its actually deleted
   await AsyncStorage.multiRemove([UP_SETTINGS_KEY, UP_SETTINGS_KEY], err => {
+    if (err) {
+      console.error(err);
+    }
     console.log('Removed');
   });
 }
@@ -108,8 +111,7 @@ type V1Code = string;
 type V2Code = string;
 import firestore from '@react-native-firebase/firestore';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
-import {AuthInfoMap, authV1} from '../app/utils';
-import {Analytics} from '../CTC/analytics';
+import {authV1} from '../app/utils';
 
 async function authV2(identity: Identity) {
   const cred = await authenticateCredential(firestore(), identity);

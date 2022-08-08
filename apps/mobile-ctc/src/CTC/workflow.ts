@@ -11,6 +11,7 @@ import ViewVisitScreen from './_screens/ViewVisit';
 import ViewPatientScreen from './_screens/ViewPatient';
 import ViewInvestigationScreen from './_screens/ViewInvestigation';
 
+import EditPatientScreen from './_screens/EditPatient';
 import MedicationMapScreen from './_screens/MedicationMap';
 import RegisterNewPatientScreen from './_screens/RegisterNewPatient';
 import ReportMissedAppointmentScreen from './_screens/ReportMissedAppointment';
@@ -49,6 +50,7 @@ export type WorkflowParamList = WorkflowNavigator<{
   >;
   'ctc.medication-stock': typeof MedicationStock;
   'ctc.register-new-patient': typeof RegisterNewPatientScreen;
+  'ctc.edit-patient': typeof EditPatientScreen;
 
   'ctc.view-patient': typeof ViewPatientScreen;
   'ctc.view-visit': typeof ViewVisitScreen;

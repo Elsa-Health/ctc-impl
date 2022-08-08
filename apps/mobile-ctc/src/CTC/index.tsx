@@ -17,6 +17,7 @@ import ReportMissedAppointmentScreen from './_screens/ReportMissedAppointment';
 
 import MedicationDispenseScreen from './_screens/MedicationDispense';
 import MedicationRequestScreen from './_screens/MedicationRequest';
+import EditPatientScreen from './_screens/EditPatient';
 
 // import {withFlowContext} from '@elsa-ui/react-native-workflows';
 import uuid from 'react-native-uuid';
@@ -38,7 +39,6 @@ import {CTC} from './emr/types';
 import MedicationVisit from './_screens/MedicationVisit';
 import MedicationStock from './_screens/MedicationStock';
 import {
-  useAttachStockListener,
   useListenCollection,
   useAttachAppointmentsListener,
 } from './emr/react-hooks';
@@ -46,7 +46,7 @@ import {
 import * as Sentry from '@sentry/react-native';
 import {queryCollection} from './emr/actions';
 import {convertDMYToDate, removeWhiteSpace} from './emr/utils';
-import {format, isAfter} from 'date-fns';
+import {differenceInDays, format, isAfter} from 'date-fns';
 import {getEMR, Seeding} from './emr/store';
 import {
   AppointmentRequest,
@@ -60,6 +60,8 @@ import {
   executeChain,
   InvestigationResult,
   Observation,
+  MedicationRequest,
+  MedicationDispense,
 } from '@elsa-health/emr';
 import {date, utcDateString} from '@elsa-health/emr/lib/utils';
 
@@ -67,11 +69,11 @@ import {date, utcDateString} from '@elsa-health/emr/lib/utils';
 import {Migration} from './emr/temp.migrate';
 
 import SplashScreen from 'react-native-splash-screen';
-import * as R from 'ramda';
 import {Stack, useWorkflowStore, WorkflowProvider} from './workflow';
 import produce from 'immer';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ConnectionSync from './emr/sync';
+import {Toast, ToastPortal} from './component/toast-message';
 
 function practitioner(ep: ElsaProvider): CTC.Doctor {
   return {
@@ -114,6 +116,7 @@ export default function Main(props: any) {
   return (
     <WorkflowProvider>
       <App {...props} />
+      <ToastPortal />
     </WorkflowProvider>
   );
 }
@@ -164,6 +167,10 @@ function App({
         data => (data?.id ?? uuid.v4()) as string,
         Emr.collection('medication-requests'),
       ),
+      medicationDispense: prepareLazyExecutors(
+        data => (data?.id ?? uuid.v4()) as string,
+        Emr.collection('medication-dispenses'),
+      ),
       stock: prepareLazyExecutors(
         data => (data?.id ?? uuid.v4()) as string,
         Emr.collection('stock'),
@@ -204,7 +211,7 @@ function App({
     SplashScreen.hide();
   }, []);
 
-  // Something
+  // This should be 1
   console.log(++render);
 
   // setting values
@@ -233,13 +240,8 @@ function App({
   useListenCollection('inv.results', Emr.collection('investigation-results'));
   useListenCollection('stock', Emr.collection('stock'));
 
-  useListenCollection(
-    'medication-requests',
-    Emr.collection('medication-requests'),
-  );
-
-  // special store listeners
-  useAttachStockListener(Emr.collection('stock'));
+  useListenCollection('med.requests', Emr.collection('medication-requests'));
+  useListenCollection('med.dispenses', Emr.collection('medication-dispenses'));
 
   // Appointment related stores
   useListenCollection(
@@ -256,6 +258,13 @@ function App({
   // const stock = useStock(Emr);
   // const report = useEMRReport(Emr);
 
+  // Toast.show({
+  //   type: 'info',
+  //   text1: 'Base Information',
+  //   text2: 'Something is happening',
+  //   visibilityTime: 500000,
+  // });
+
   return (
     <SafeAreaView style={{flex: 1}}>
       <ConnectionSync
@@ -265,6 +274,7 @@ function App({
         provider={provider}
       />
       <Stack.Navigator
+        initialRouteName="ctc.dashboard"
         screenOptions={{
           headerShown: false,
           presentation: 'formSheet',
@@ -309,6 +319,50 @@ function App({
             }),
           })}
         />
+        {/* <Stack.Screen 
+          name="ctc.notifications"
+          component={withFlowContext(NotificationsScreen, {})
+        /> */}
+        <Stack.Screen
+          name="ctc.edit-patient"
+          component={withFlowContext(EditPatientScreen<ctc.Patient>, {
+            // entry: {
+            // default
+            // TODO: might want to remove this and only make visible for
+            //  the pages that navigate to this page
+            // patient: {},
+            // },
+            actions: ({navigation}) => ({
+              onSavePatientEdit(id, edittedRecord, ref) {
+                const patient = {patientId: id, ...edittedRecord};
+
+                // execute the thing and change stuff
+                // ...
+                const updatedPatient = ctc.createPatientObject(
+                  patient,
+                  date(ref.createdAt),
+                  // NOTE: when different organization modifies the records,
+                  //  you might want to include that fact somewhere
+                  ref.managingOrganization ?? organization,
+                );
+
+                const run = executor.patient(({update}) =>
+                  update(id, updatedPatient),
+                );
+
+                run()
+                  .then(() => console.log('Record updated'))
+                  .catch(err =>
+                    console.error('Record update failed' + err.message),
+                  )
+                  .catch(err => Sentry.captureException(err))
+                  .finally(() => navigation.navigate('ctc.patient-dashboard'));
+
+                // console.log({updatedPatient});
+              },
+            }),
+          })}
+        />
         <Stack.Screen
           name="ctc.view-investigation"
           component={withFlowContext(
@@ -328,36 +382,28 @@ function App({
                   );
 
                   return invRes.toArray().map(f => {
+                    const lastUpdatedAt = date(f.lastUpdatedAt);
+                    const createdAt = date(f.createdAt);
+
                     return {
                       id: f.id,
                       identifier: authorizingRequest.data.investigationId,
                       shape: authorizingRequest.data.obj,
                       value: f.observation.data,
+                      lastUpdatedAt:
+                        lastUpdatedAt.toISOString() === createdAt.toISOString()
+                          ? null
+                          : lastUpdatedAt,
                       createdAt: date(f.createdAt),
                     };
                   });
-                  // return (
-                  //   [
-                  //     'urinalysis',
-                  //     'dried-blood-spot-dbs-test',
-                  //     'cd-4-count',
-                  //   ] as Investigation[]
-                  // ).map(f => ({
-                  //   id: f,
-                  //   identifier: f,
-                  //   shape: Investigation.fromKey(f),
-                  //   value: null,
-                  //   createdAt: new Date(),
-                  // }));
-                  //.toArray();
                 },
                 async saveResult(results, authorizingRequest) {
                   let invResult: ctc.InvestigationResult | null = null;
-
-                  console.log('===>', results);
+                  // console.log('===>', results);
                   // save the investigation result
                   if (results.id) {
-                    console.log('UPDATED!!');
+                    // console.log('UPDATED!!');
                     // editing existing one
                     // TODO: Change this to a todo script instead
                     invResult = InvestigationResult<ctc.InvestigationResult>({
@@ -386,10 +432,15 @@ function App({
 
                   console.log({results, authorizingRequest});
                   if (invResult === null) {
-                    ToastAndroid.show(
-                      'Unable to create the investigation results!',
-                      ToastAndroid.LONG,
-                    );
+                    // ToastAndroid.show(
+                    //   'Unable to create the investigation results!',
+                    //   ToastAndroid.LONG,
+                    // );
+                    Toast.showInfo({
+                      text1: 'Failed',
+                      text2: "Couldn't create a result for the investigation ",
+                    });
+
                     return;
                   }
 
@@ -398,12 +449,17 @@ function App({
                     executor.investigationResult(({add}) =>
                       add(invResult as ctc.InvestigationResult),
                     ),
-                    () =>
-                      ToastAndroid.show(
-                        'Investigation Result Updated!',
-                        ToastAndroid.LONG,
-                      ),
-                    () => console.log('Done!'),
+                    () => {
+                      Toast.showInfo({
+                        text1: 'Result created!',
+                        text2: `Created the investigation result for ${authorizingRequest.data.investigationId}`,
+                      });
+                      // ToastAndroid.show(
+                      //   'Investigation Result Updated!',
+                      //   ToastAndroid.LONG,
+                      // )
+                    },
+                    // () => console.log('Done!'),
                     // navigation.goBack,
                   ]);
                 },
@@ -446,10 +502,15 @@ function App({
                 } else {
                   // patient doesnt exist,
                   if (sex === undefined || dateOfBirth === undefined) {
-                    ToastAndroid.show(
-                      'Missing necessary info for patient registration',
-                      ToastAndroid.LONG,
-                    );
+                    Toast.showError({
+                      text1: 'Missing necessary details',
+                      text2:
+                        'Please check the form. You are likely missing sex or birthDate',
+                    });
+                    // ToastAndroid.show(
+                    //   'Missing necessary info for patient registration',
+                    //   ToastAndroid.LONG,
+                    // );
                     return;
                   }
 
@@ -474,10 +535,13 @@ function App({
                     'Patient information missing, Try again later',
                     ToastAndroid.LONG,
                   );
+
+                  Toast.showError({
+                    text1: 'Missing details',
+                    text2: 'Patient information missing, Try again later',
+                  });
                   return;
                 }
-
-                console.log('Creating report...');
 
                 const reportId = uuid.v4() as string;
                 // ...
@@ -496,7 +560,7 @@ function App({
                     },
                   }),
                 );
-                console.log('Creating appointment request...');
+                // console.log('Creating appointment request...');
 
                 // create appointment
                 const appointmentId = uuid.v4() as string;
@@ -512,10 +576,15 @@ function App({
                 );
 
                 console.log('Creating Done...');
-                ToastAndroid.show(
-                  'Completed creating missed appointment request',
-                  ToastAndroid.LONG,
-                );
+
+                Toast.showSuccess({
+                  text1: 'Completed!',
+                  text2: 'Successfully created a missed appointment request',
+                });
+                // ToastAndroid.show(
+                //   'Completed creating missed appointment request',
+                //   ToastAndroid.LONG,
+                // );
                 navigation.goBack();
               },
             }),
@@ -569,9 +638,7 @@ function App({
             MedicationVisit<CTC.Patient, CTC.Visit, CTC.Organization>,
             {
               actions: ({navigation}) => ({
-                async fetchMedications() {
-                  return stock.medications?.toArray() ?? [];
-                },
+                getStockCollectionNode: () => Emr.collection('stock'),
                 async fetchAppointments(patientId: string) {
                   const appts = appointments.appointments
                     .filter(d => d.type === 'not-responded')
@@ -589,6 +656,43 @@ function App({
                   return appts;
                 },
                 async complete(data, patient, organization, refVisit) {
+                  // console.log(data.arvRegimens.map(d => d.medication));
+
+                  // Dealing with dispensing ARV Medication.
+
+                  // substract the stock information
+                  // ASSUMPTIONS:
+                  // -
+
+                  // create the medication requests
+                  // (reason being the stock matter will be address from there)
+
+                  // const mrqs = data.arvRegimens.map(x => {
+                  //   return MedicationRequest<ctc.MedicationRequest>({
+                  //     id: `mr-${uuid.v4()}`,
+                  //     authoredOn: utcDateString(),
+                  //     reason: 'Requesting ARV medication from a visit.',
+                  //     subject: patient,
+                  //     medication: x.medication,
+                  //     requester: reference(doctor),
+                  //     // information about stocking
+                  //     supplyInquiry: null,
+                  //   });
+                  // });
+
+                  // create medication requests
+                  // executeChain([
+                  //   executor.medicationRequest(({multiAdd}) => multiAdd(mrqs)),
+                  // ])
+                  //   .then(() => {
+                  //   })
+                  //   .then(() => navigation.goBack())
+                  //   .catch(err => {
+                  //     console.error(err);
+                  //     Sentry.captureException(err);
+                  //   });
+
+                  // return;
                   if (refVisit === null) {
                     // creating new visit
                     const {
@@ -636,21 +740,29 @@ function App({
 
                     // execute operations in order
                     return executeChain(ops)
-                      .then(() => {
-                        // indicate success
-                        ToastAndroid.show(
-                          'Completed recording investigation + prescriptions',
-                          ToastAndroid.SHORT,
-                        );
-
-                        navigation.goBack();
-                      })
+                      .then(() =>
+                        Toast.showSuccess({
+                          text1: 'Visit created',
+                          text2: `Tap here to see the patient's file`,
+                          onPress() {
+                            navigation.goBack();
+                            navigation.navigate('ctc.view-patient', {
+                              patient,
+                            });
+                          },
+                        }),
+                      )
+                      .then(() => navigation.goBack())
                       .catch(err => {
                         console.log(err);
-                        ToastAndroid.show(
-                          'Failed to properly complete the visit. Try again later.',
-                          ToastAndroid.LONG,
-                        );
+                        // ToastAndroid.show(
+                        //   'Failed to properly complete the visit. Try again later.',
+                        //   ToastAndroid.LONG,
+                        // );
+                        Toast.showError({
+                          text1: 'Oops!',
+                          text2: "Couldn't make medication requests",
+                        });
                         Sentry.captureException(err);
                       });
                   }
@@ -700,18 +812,31 @@ function App({
                   return executeChain(pendingUpdateOps)
                     .then(() => {
                       // indicate success
-                      ToastAndroid.show(
-                        'Updated ctc visit',
-                        ToastAndroid.SHORT,
-                      );
-                      navigation.goBack();
+                      // ToastAndroid.show(
+                      //   'Updated ctc visit',
+                      //   ToastAndroid.SHORT,
+                      // );
+                      Toast.showSuccess({
+                        text1: 'Success',
+                        text2: `Updated the patient (${patient.id}) visit`,
+                        onPress() {
+                          navigation.navigate('ctc.view-patient', {
+                            patient,
+                          });
+                        },
+                      }),
+                        navigation.goBack();
                     })
                     .catch(err => {
                       console.log(err);
-                      ToastAndroid.show(
-                        'Failed to properly complete the visit. Try again later.',
-                        ToastAndroid.LONG,
-                      );
+                      // ToastAndroid.show(
+                      //   'Failed to properly complete the visit. Try again later.',
+                      //   ToastAndroid.LONG,
+                      // );
+                      Toast.showError({
+                        text1: 'Oops!',
+                        text2: "Couldn't make medication requests",
+                      });
                       Sentry.captureException(err);
                     });
                 },
@@ -725,6 +850,9 @@ function App({
         <Stack.Screen
           name="ctc.medication-stock"
           component={withFlowContext(MedicationStock, {
+            entry: {
+              stockCollectionNode: Emr.collection('stock'),
+            },
             actions: ({navigation}) => ({
               async setARVStockItem(_id, [medicationId, data]) {
                 console.log(_id, medicationId, data);
@@ -808,8 +936,11 @@ function App({
                     ).get(0) ?? null;
 
                   if (s === null) {
-                    // indicate success
-                    ToastAndroid.show('Unable to update!', ToastAndroid.SHORT);
+                    Toast.showError({
+                      text1: 'No stock info',
+                      text2: `Unable to locate the information for stock record with ID [${_id}]`,
+                    });
+                    // ToastAndroid.show('Unable to update!', ToastAndroid.SHORT);
                     return;
                   }
                   // get proper medication
@@ -860,11 +991,15 @@ function App({
                   // ...
                 }
 
+                Toast.showInfo({
+                  text1: 'Stock Information Updated',
+                });
+
                 // indicate success
-                ToastAndroid.show(
-                  'Updated stock medication',
-                  ToastAndroid.SHORT,
-                );
+                // ToastAndroid.show(
+                //   'Updated stock medication',
+                //   ToastAndroid.SHORT,
+                // );
               },
             }),
           })}
@@ -908,20 +1043,28 @@ function App({
 
                 executeChain(ops)
                   .then(() => {
-                    ToastAndroid.show(
-                      'Patient ' + patient.patientId + ' registered !.',
-                      ToastAndroid.SHORT,
-                    );
+                    Toast.showSuccess({
+                      text1: 'Registered New Patient',
+                      text2: `Patient ${newPatient.id} has been registered to your facility`,
+                    });
+                    // ToastAndroid.show(
+                    //   'Patient ' + patient.patientId + ' registered !.',
+                    //   ToastAndroid.SHORT,
+                    // );
                     navigation.navigate('ctc.view-patient', {
                       patient: newPatient,
                       organization,
                     });
                   })
                   .catch(err => {
-                    ToastAndroid.show(
-                      'Unable to register patient. Please try again later',
-                      ToastAndroid.LONG,
-                    );
+                    Toast.showSuccess({
+                      text1: 'Registration Failed',
+                      text2: `Couldn't register the patient (${newPatient.id}). Please try again later`,
+                    });
+                    // ToastAndroid.show(
+                    //   'Unable to register patient. Please try again later',
+                    //   ToastAndroid.LONG,
+                    // );
                     Sentry.captureException(err);
                   });
               },
@@ -969,8 +1112,58 @@ function App({
         />
         <Stack.Screen
           name="ctc.view-patient"
-          component={withFlowContext(ViewPatientScreen, {
+          component={withFlowContext(ViewPatientScreen<CTC.Patient>, {
+            entry: {
+              organization,
+            },
             actions: ({navigation}) => ({
+              onToEditPatient(patient) {
+                const {id, ...other} = patient;
+                const {
+                  dateOfHIVPositiveTest: dateOfTest,
+                  dateOfStartARV: dateStartedARVs,
+                  isCurrentlyOnARV,
+                  hasPositiveStatus,
+                  hasTreatmentSupport,
+                  typeOfSupport,
+                  whoStage,
+                } = other.extendedData ?? {};
+                // ...
+                navigation.navigate('ctc.edit-patient', {
+                  ref: patient,
+                  patient: {
+                    id,
+                    firstName: other.info?.firstName,
+                    familyName: other.info?.familyName,
+                    phoneNumber: other.contact?.phoneNumber,
+                    maritalStatus: other.maritalStatus,
+
+                    // reformat the date
+                    dateOfBirth: format(
+                      date(other.birthDate),
+                      'dd / MM / yyyy',
+                    ),
+                    resident: (other.info?.address ?? '')
+                      .replace('District', '')
+                      .trim(),
+                    hasPositiveTest: Boolean(hasPositiveStatus),
+                    hasPatientOnARVs: Boolean(isCurrentlyOnARV),
+                    dateOfTest,
+                    dateStartedARVs,
+
+                    sex: other.sex,
+                    whoStage,
+                    hasTreatmentSupport: Boolean(hasTreatmentSupport),
+                    typeOfSupport,
+                  },
+                });
+              },
+              onNewVisit(patient) {
+                navigation.navigate('ctc.medication-visit', {
+                  patient,
+                  organization,
+                });
+              },
               async nextAppointment(patientId: string) {
                 const after = await queryCollection(
                   Emr.collection('appointment-requests'),
@@ -1084,10 +1277,15 @@ function App({
                         });
                       } else {
                         // ...
-                        ToastAndroid.show(
-                          'Patient is missing, unable to edit visit',
-                          ToastAndroid.LONG,
-                        );
+                        Toast.showWarn({
+                          text1: 'Patient not found',
+                          text2:
+                            'Make sure the patient exists, or please try again later',
+                        });
+                        // ToastAndroid.show(
+                        //   'Patient is missing, unable to edit visit',
+                        //   ToastAndroid.LONG,
+                        // );
                       }
                     },
                   }))
@@ -1177,35 +1375,68 @@ function App({
                 navigation.goBack();
               },
               onAcceptMedicationRequest(medicationRequest, finish) {
-                // console.log('Accepting ARV Medication');
-                const now = new Date();
+                // 1. update the stock information for the medication (assuming possible)
+                const med = medicationRequest.medication;
 
-                const dispense: MedicaDisp = {
+                const now = new Date();
+                // amount of medication taken
+                const count = 1;
+
+                // creates a medication dispense object
+                const dispense = MedicationDispense<ctc.MedicationDispense>({
+                  id: `md-${uuid.v4()}`,
                   authorizingRequest: {
                     id: medicationRequest.id,
                     resourceType: 'Reference',
                     resourceReferenced: 'MedicationRequest',
                   },
-                  code: null,
-                  createdAt: now.toISOString(),
-                  dosageAndRate: null,
-                  id: uuid.v4() as string,
-                  medication: medicationRequest.medication,
-                  resourceType: 'MedicationDispense',
+                  createdAt: utcDateString(now),
+                  dosageAndRate: {
+                    count: count,
+                    type: med.form,
+                  },
+                  medication: med,
                   supplier: practitioner(provider),
-                };
-                setDoc(
-                  doc(Emr.collection('medication-dispenses'), dispense.id),
-                  dispense,
-                )
-                  .then(() => {
-                    console.log('Medication Request accepted', dispense.id);
-                  })
-                  .then(finish)
-                  .then(() => navigation.goBack())
-                  .catch(() => {
-                    console.log('Unable to accept medication request');
-                  });
+                });
+
+                const stockColl = Emr.collection('stock');
+                // check for the medication requested from stock
+                executeChain([
+                  () =>
+                    // update stock information
+                    query(stockColl, {
+                      where: item =>
+                        item.medication.identifier === med.identifier,
+                    })
+                      .then(stockRecords =>
+                        Promise.all(
+                          stockRecords.map(async record => {
+                            updateDoc(doc(stockColl, record.id), {
+                              lastUpdatedAt: utcDateString(now),
+                              count: record.count - count,
+                            });
+                          }),
+                        ),
+                      )
+                      .catch(err => {
+                        Toast.showError({
+                          text1: "Couldn't update stock",
+                          text2: err.message,
+                        });
+                      }),
+
+                  // save the medication dispense
+                  executor.medicationDispense(({add}) => add(dispense)),
+
+                  // TODO: HERE!!!
+                  () =>
+                    Toast.showSuccess({
+                      text1: 'Accepted Request',
+                      text2: `Confirmed request for medication '${med.text}' for ${medicationRequest.subject.id} `,
+                    }),
+                  () => finish(),
+                  () => navigation.goBack(),
+                ]);
               },
             }),
           })}
@@ -1239,67 +1470,6 @@ function App({
               },
               onShowAllMedicationDispenses() {
                 navigation.navigate('ctc.view-medication-dispenses');
-              },
-              onMakeRequest(data, finish) {
-                // add medications to the list
-                console.log('Sending request....');
-                const now = new Date();
-
-                const request: MedicaReq = {
-                  authoredOn: now.toUTCString(),
-                  code: null,
-                  createdAt: now.toISOString(),
-                  id: uuid.v4() as string,
-                  instructions: null,
-                  medication: {
-                    resourceType: 'Medication',
-                    alias:
-                      data.type === 'standard'
-                        ? Med.all.fromKey(data.medication)
-                        : null,
-                    code: data.type ?? 'standard',
-                    data:
-                      data.type === 'arv'
-                        ? {className: data.className, regimen: data.regimen}
-                        : {
-                            medication: data.medication,
-                            text: Med.all.fromKey(data.medication),
-                          },
-                    id:
-                      data.type === 'arv'
-                        ? `ctc-arv:${data.regimen}`
-                        : `ctc-standard:${data.medication}`,
-                    ingredients: [],
-                    name: data.type === 'arv' ? data.regimen : data.medication,
-                    createdAt: now.toISOString(),
-                  },
-                  requester: practitioner(provider),
-
-                  subject: {
-                    id: data.patientId,
-                    resourceReferenced: 'Patient',
-                    resourceType: 'Reference',
-                  },
-                  reason: data.reason,
-                  method: 'Unspecified',
-                  route: 'Non specific',
-                  status: 'active',
-                  resourceType: 'MedicationRequest',
-                };
-
-                // Send over request
-                // ...
-                setDoc(
-                  doc(Emr.collection('medication-requests'), request.id),
-                  request,
-                )
-                  .then(() => {
-                    console.log('SUCESSS!!!');
-                  })
-                  .then(finish)
-                  .catch(() => {
-                    console.log('Failed to add medication request');
-                  });
               },
             }),
           })}

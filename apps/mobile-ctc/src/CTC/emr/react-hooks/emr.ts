@@ -160,53 +160,108 @@ export function useListenCollection<
 //   };
 // }
 
-export function useAttachStockListener(stockCollection: any) {
-  const set = React.useCallback(useWorkflowStore.getState().setValue, []);
-
-  // setting up the collection to auto update as needed
+export function useAttachStockListener(
+  reportStockKey: string,
+  // stockCollection: any,
+) {
+  const set = useWorkflowStore.getState().setValue;
   React.useEffect(() => {
-    const sub = onUpdateCollectionDocument(stockCollection, function (d) {
-      // fires when something changes
-      query(stockCollection).then(vals => {
-        set(s =>
-          produce(s, df => {
-            // setting up the content
-            // might want to serialize at this point
-            df['report-stock'] = {
-              arvs: Object.fromEntries(
-                vals
-                  .map(d => [
-                    d.id,
-                    [
-                      d.medication.identifier,
-                      {
-                        count: d.count.toString(),
-                        form: d.medication.form,
-                        expiresAt: format(date(d.expiresAt), 'dd / MM / yyyy'),
-                        ingredients: d.medication.ingredients.map(
-                          d => d.identifier,
-                        ),
-                        alias: d.medication.alias,
-                        type: d.medication.type,
-                        estimatedFor: '30-days',
-                        identifier: d.medication.identifier,
-                        text: d.medication.text,
-                        group: d.extendedData?.group ?? 'adults',
-                        concentrationValue: null,
-                      } as SingleStockItem,
-                    ],
-                  ])
-                  .toArray(),
-              ),
-              medications: vals.map(d => d.medication).toSet(),
-            };
-          }),
-        );
-      });
+    const unsubscribe = useWorkflowStore.subscribe(r => {
+      set(s =>
+        produce(s, df => {
+          const stock = df.stock;
+
+          if (stock === undefined) {
+            return;
+          }
+
+          // setting up the content
+          // might want to serialize at this point
+          df[reportStockKey] = {
+            arvs: Object.fromEntries(
+              stock
+                .map(d => [
+                  d.id,
+                  [
+                    d.medication.identifier,
+                    {
+                      count: d.count.toString(),
+                      form: d.medication.form,
+                      expiresAt: format(date(d.expiresAt), 'dd / MM / yyyy'),
+                      ingredients: d.medication.ingredients.map(
+                        d => d.identifier,
+                      ),
+                      alias: d.medication.alias,
+                      type: d.medication.type,
+                      estimatedFor: '30-days',
+                      identifier: d.medication.identifier,
+                      text: d.medication.text,
+                      group: d.extendedData?.group ?? 'adults',
+                      concentrationValue: null,
+                    } as SingleStockItem,
+                  ],
+                ])
+                .toArray(),
+            ),
+            medications: stock
+              .map(d => d.medication)
+              .toSet()
+              .toArray(),
+          };
+        }),
+      );
     });
 
-    return () => sub.unsubscribe();
-  }, [stockCollection]);
+    return () => unsubscribe();
+  }, []);
+
+  // setting up the collection to auto update as needed
+  // React.useEffect(() => {
+  //   const sub = onUpdateCollectionDocument(stockCollection, function (d) {
+  //     // fires when something changes
+  //     query(stockCollection).then(vals => {
+  //       set(s =>
+  //         produce(s, df => {
+  //           // setting up the content
+  //           // might want to serialize at this point
+  //           df[reportStockKey] = {
+  //             arvs: Object.fromEntries(
+  //               vals
+  //                 .map(d => [
+  //                   d.id,
+  //                   [
+  //                     d.medication.identifier,
+  //                     {
+  //                       count: d.count.toString(),
+  //                       form: d.medication.form,
+  //                       expiresAt: format(date(d.expiresAt), 'dd / MM / yyyy'),
+  //                       ingredients: d.medication.ingredients.map(
+  //                         d => d.identifier,
+  //                       ),
+  //                       alias: d.medication.alias,
+  //                       type: d.medication.type,
+  //                       estimatedFor: '30-days',
+  //                       identifier: d.medication.identifier,
+  //                       text: d.medication.text,
+  //                       group: d.extendedData?.group ?? 'adults',
+  //                       concentrationValue: null,
+  //                     } as SingleStockItem,
+  //                   ],
+  //                 ])
+  //                 .toArray(),
+  //             ),
+  //             medications: vals
+  //               .map(d => d.medication)
+  //               .toSet()
+  //               .toArray(),
+  //           };
+  //         }),
+  //       );
+  //     });
+  // });
+
+  // return () => sub.unsubscribe();
+  // }, [stockCollection]);
 }
 
 export type Appointment = {
@@ -401,14 +456,14 @@ export function useMedicationStock(emr: EMRModule) {
     setSingleStock(Object.fromEntries(svp));
   }, [emr]);
 
-  React.useEffect(() => {
-    onCollectionSnapshot(emr.collection('stock'), (action, docs) => {
-      // ...
-      if (action === 'changed') {
-        console.log(docs);
-      }
-    });
-  }, []);
+  // React.useEffect(() => {
+  //   onCollectionSnapshot(emr.collection('stock'), (action, docs) => {
+  //     // ...
+  //     if (action === 'changed') {
+  //       console.log(docs);
+  //     }
+  //   });
+  // }, []);
 
   React.useEffect(() => {
     // const d = emr.onSnapshotUpdate((token, source) => {

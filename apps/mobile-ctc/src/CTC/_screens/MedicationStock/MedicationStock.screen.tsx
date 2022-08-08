@@ -41,6 +41,10 @@ import {Controller, useForm} from 'react-hook-form';
 
 import z from 'zod';
 import {useWorkflowStore} from '../../workflow';
+import {format} from 'date-fns';
+import {date} from '@elsa-health/emr/lib/utils';
+
+import {FlashList} from '@shopify/flash-list';
 
 const SingleStockItem = z.object({
   count: z.string(),
@@ -77,6 +81,38 @@ type ARVMap = {
 type F = keyof ARVMap;
 type V = ARVMap[F];
 
+const prepareReport = stock => {
+  return {
+    arvs: Object.fromEntries(
+      stock
+        .map(d => [
+          d.id,
+          [
+            d.medication.identifier,
+            {
+              count: d.count.toString(),
+              form: d.medication.form,
+              expiresAt: format(date(d.expiresAt), 'dd / MM / yyyy'),
+              ingredients: d.medication.ingredients.map(d => d.identifier),
+              alias: d.medication.alias,
+              type: d.medication.type,
+              estimatedFor: '30-days',
+              identifier: d.medication.identifier,
+              text: d.medication.text,
+              group: d.extendedData?.group ?? 'adults',
+              concentrationValue: null,
+            } as SingleStockItem,
+          ],
+        ])
+        .toArray(),
+    ),
+    medications: stock
+      .map(d => d.medication)
+      .toSet()
+      .toArray(),
+  };
+};
+
 export default function MedicationStockScreen({
   actions: $,
 }: WorkflowScreenProps<
@@ -88,15 +124,36 @@ export default function MedicationStockScreen({
     ) => Promise<void>;
   }
 >) {
-  const e = useWorkflowStore(s => s.value.stock || {});
+  // const e = useWorkflowStore(s => s.value['reporting-stock'] || {});
+  // console.log('TOOO');
+
+  const [report, set] = React.useState(
+    prepareReport(useWorkflowStore.getState().value['stock']),
+  );
+
+  React.useEffect(() => {
+    // console.log('PING-PONG');
+    const unsubscribe = useWorkflowStore.subscribe(r => {
+      const stock = r?.value?.stock;
+      if (stock === undefined) {
+        return;
+      }
+
+      return set(prepareReport(stock));
+    });
+
+    return () => unsubscribe();
+  }, []);
+  // console.log(e);
+  // console.log({x: e[0]});
   const {spacing} = useTheme();
   // Summary of stock
   const groups = React.useMemo(
     () =>
-      groupByFn(Object.entries(e.arvs ?? {}), ([_, s]) => s[1].group).map(
+      groupByFn(Object.entries(report.arvs ?? {}), ([_, s]) => s[1].group).map(
         ([d, x]) => [d, x.length],
       ),
-    [e.arvs],
+    [report.arvs],
   );
 
   const [singleForm, setSingleForm] = React.useState<[F, V] | null>(null);
@@ -111,15 +168,15 @@ export default function MedicationStockScreen({
   // variables
   const snapPoints = React.useMemo(() => ['90%'], []);
 
-  const showToAddSingleItem = () => {
+  const showToAddSingleItem = React.useCallback(() => {
     setSingleForm(null);
     singleBottomSheetRef.current?.present();
-  };
+  }, []);
 
-  const showToUpdateSingleItem = (id: F, item: V) => {
+  const showToUpdateSingleItem = React.useCallback((id: F, item: V) => {
     setSingleForm([id, item]);
     singleBottomSheetRef.current?.present();
-  };
+  }, []);
 
   return (
     <BottomSheetModalProvider>
@@ -165,31 +222,25 @@ export default function MedicationStockScreen({
                   Add
                 </Button>
               }>
-              {Object.entries(e.arvs ?? {}).length === 0 ? (
+              {Object.entries(report.arvs ?? {}).length === 0 ? (
                 <View>
                   <Text style={{textAlign: 'center'}} italic>
                     No stock information added for single arv medication
                   </Text>
                 </View>
               ) : (
-                Object.entries(e.arvs ?? {}).map(([singleId, vals]) => {
-                  if (singleId === null) {
-                    return (
-                      <View>
-                        <Text>SOMETHING</Text>
-                      </View>
-                    );
-                  } else {
-                    return (
-                      <React.Fragment key={singleId}>
-                        <MedicationItem
-                          item={vals[1]}
-                          onPress={() => showToUpdateSingleItem(singleId, vals)}
-                        />
-                      </React.Fragment>
-                    );
-                  }
-                })
+                <FlashList
+                  data={Object.entries(report.arvs ?? {}).filter(
+                    d => d[0] !== null,
+                  )}
+                  estimatedItemSize={50}
+                  renderItem={({item: [singleId, vals]}) => (
+                    <MedicationItem
+                      item={vals[1]}
+                      onPress={() => showToUpdateSingleItem(singleId, vals)}
+                    />
+                  )}
+                />
               )}
             </Section>
           </ScrollView>
@@ -200,7 +251,10 @@ export default function MedicationStockScreen({
           ref={singleBottomSheetRef}
           backdropComponent={CustomBackdrop}
           snapPoints={snapPoints}>
-          <BottomSheetScrollView style={{marginHorizontal: 16}}>
+          <BottomSheetScrollView
+            style={{marginHorizontal: 16}}
+            // Fixes the 'Cannot add new property 'value' error (Might be something to add to gorhom bottom sheet implementation)
+            containerOffset={{value: undefined}}>
             <MediForm
               initialValue={singleForm}
               submit={async (id, values) => {

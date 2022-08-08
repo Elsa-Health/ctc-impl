@@ -9,7 +9,11 @@ import {
   TouchableRipple,
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useTheme} from '@elsa-ui/react-native/theme';
+import {
+  DefaultColor,
+  DefaultTypography,
+  useTheme,
+} from '@elsa-ui/react-native/theme';
 import {TextInput} from 'react-native-paper';
 
 import SectionedMultiSelect, {

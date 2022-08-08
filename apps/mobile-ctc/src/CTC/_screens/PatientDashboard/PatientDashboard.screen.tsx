@@ -1,21 +1,24 @@
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 
 import {Layout, Text} from '@elsa-ui/react-native/components';
 import {useTheme} from '@elsa-ui/react-native/theme';
-import {ActivityIndicator, ScrollView, View} from 'react-native';
-import {Block, Column, Row, Section, TitledItem} from '../../temp-components';
+import {ActivityIndicator, ScrollView} from 'react-native';
+import {Column, Row, Section, TitledItem} from '../../temp-components';
 import {WorkflowScreenProps} from '@elsa-ui/react-native-workflows';
 import {Searchbar, Chip, Button, FAB} from 'react-native-paper';
 import _ from 'lodash';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import {List, Set} from 'immutable';
+import {List} from 'immutable';
 import {format} from 'date-fns';
 import produce from 'immer';
 import {CTCPatient} from '../../emr/types';
 import {useAsyncFn} from 'react-use';
 import {PatientQuery} from '../../misc';
+
+import {FlashList} from '@shopify/flash-list';
 
 const options: Array<{name: Option; icon: string}> = [
   // {name: 'id', icon: 'tag-text-outline'},
@@ -75,7 +78,7 @@ export default function PatientDashboardScreen({
       onChangeSearchText(entry.searchText);
       searchTextInputRef.current?.focus();
     }
-  }, [onChangeSearchText, resetSearch]);
+  }, [onChangeSearchText, resetSearch, entry.searchText]);
 
   return (
     <Layout title="Patient Dashboard" style={{padding: 0}}>
@@ -163,11 +166,18 @@ export default function PatientDashboardScreen({
               Patients / {value[0].count()}
             </Text>
             <Column>
-              {value[0].map((d, ix) => (
-                <Section mode="raised" key={`${d.id}-${ix}`} spaceTop>
-                  <PatientItem {...d} />
-                </Section>
-              ))}
+              <FlashList
+                data={value[0].toArray()}
+                estimatedItemSize={130}
+                renderItem={({item}) => (
+                  <Section
+                    mode="raised"
+                    spaceTop
+                    style={{minHeight: 40, width: '100%'}}>
+                    <PatientItem {...item} />
+                  </Section>
+                )}
+              />
             </Column>
           </Section>
         )}
@@ -187,24 +197,24 @@ export default function PatientDashboardScreen({
   );
 }
 
-type AwaitComponentProps =
-  | {loading: true; error: undefined; value: undefined}
-  | {loading: false; error: undefined; value: T}
-  | {loading: false; error: Error; value: undefined};
-function AwaitedState<T>({
-  state,
-  children: Child,
-}: {
-  state: {loading: boolean; value: T; error?: Error | undefined};
-  children: (props: AwaitComponentProps) => JSX.Element;
-}) {
-  return (
-    <>
-      {/* @ts-ignore */}
-      <Child {...state} />
-    </>
-  );
-}
+// type AwaitComponentProps =
+//   | {loading: true; error: undefined; value: undefined}
+//   | {loading: false; error: undefined; value: T}
+//   | {loading: false; error: Error; value: undefined};
+// function AwaitedState<T>({
+//   state,
+//   children: Child,
+// }: {
+//   state: {loading: boolean; value: T; error?: Error | undefined};
+//   children: (props: AwaitComponentProps) => JSX.Element;
+// }) {
+//   return (
+//     <>
+//       {/* @ts-ignore */}
+//       <Child {...state} />
+//     </>
+//   );
+// }
 
 export type PatientItemProps = {
   id: string;
