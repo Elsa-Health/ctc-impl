@@ -12,7 +12,7 @@ This repo has 3 parts
 -   Server
 -   Emr
 
-<img src="/resources/basic-layout.svg" />
+<img src="/resources/basic-layout.png" />
 
 ## Getting Started
 
