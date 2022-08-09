@@ -11,7 +11,7 @@ import {Store} from 'papai/collection/core';
 import {HybridLogicalClock} from 'papai/distributed/clock';
 import {StateTrackingBox} from 'papai/distributed/store';
 import z from 'zod';
-import {getCrdtCollection, getPrivateStore} from '../emr/store';
+import {getCrdtCollection} from '../emr-helpers/store';
 
 const docref = z.object({collectionId: z.string(), documentId: z.string()});
 const docdata = z.any();

@@ -17,8 +17,8 @@ import {
   CTCOrganization,
   CTCPatient,
   StandardMedication,
-} from '../emr/types';
-import {ARVSingle, ARVSingles} from '../_screens/MedicationStock/stock';
+} from '../emr-helpers/types';
+import {ARVSingle, ARVSingles} from '../screens/MedicationStock/stock';
 
 export function getOrganizationFromProvider(ep: ElsaProvider): CTCOrganization {
   const {name, phoneNumber, address, ctcCode, website} = ep.facility;

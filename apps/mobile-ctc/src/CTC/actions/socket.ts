@@ -4,7 +4,7 @@
 import z from 'zod';
 
 import {getDocs} from 'papai/collection';
-import {getCrdtCollection, getStorage, stateBox} from '../emr/store';
+import {getCrdtCollection, getStorage, stateBox} from '../emr-helpers/store';
 import {ElsaProvider} from '../../provider/backend';
 import {mergeUp, StateMessage, syncronize} from './sync';
 

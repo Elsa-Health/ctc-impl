@@ -1,9 +1,9 @@
 import {CollectionNode} from 'papai/collection/core';
-import {queryCollection} from '../emr/actions';
-import {EMRModule} from '../emr/store';
-import {CTC} from '../emr/types';
-import {lower, removeWhiteSpace} from '../emr/utils';
-import {SearchQuery} from '../_screens/PatientDashboard/PatientDashboard.screen';
+import {queryCollection} from '../emr-helpers/actions';
+import {EMRModule} from '../emr-helpers/store';
+import {CTC} from '../emr-helpers/types';
+import {lower, removeWhiteSpace} from '../emr-helpers/utils';
+import {SearchQuery} from '../screens/PatientDashboard/PatientDashboard.screen';
 
 export async function queryPatientsFromSearch<T>(
   patientCollection: CollectionNode<CTC.Patient>,

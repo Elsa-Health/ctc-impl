@@ -1,10 +1,10 @@
 import produce from 'immer';
 import React from 'react';
-import {CTCDoctor, CTCPatient, CTCVisit} from '../emr/types';
-import {FirstPatientIntake} from '../_screens/BasicPatientIntake/BasicPatientIntake.screen';
-import {ConcludeAssessmentData} from '../_screens/ConcludeAssessment/ConcludeAssessment.screen';
-import {PatientAdherenceInfo} from '../_screens/HIVAdherenceAssessment/HIVAdherenceAssessment.screen';
-import {HIVPatientIntake} from '../_screens/HIVStageIntake/HIVStageIntake.screen';
+import {CTCDoctor, CTCPatient, CTCVisit} from '../emr-helpers/types';
+import {FirstPatientIntake} from '../screens/BasicPatientIntake/BasicPatientIntake.screen';
+import {ConcludeAssessmentData} from '../screens/ConcludeAssessment/ConcludeAssessment.screen';
+import {PatientAdherenceInfo} from '../screens/HIVAdherenceAssessment/HIVAdherenceAssessment.screen';
+import {HIVPatientIntake} from '../screens/HIVStageIntake/HIVStageIntake.screen';
 import {reference} from './basic';
 
 import {useTheme} from '@elsa-ui/react-native/theme';

@@ -14,6 +14,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@babel/preset-env": "^7.18.10",
     "@elsa-health/emr": "*",
     "@elsa-ui/react-native": "^0.2.0",
     "@elsa-ui/react-native-workflows": "^0.2.2",

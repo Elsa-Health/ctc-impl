@@ -1,31 +1,31 @@
 import {buildWorkflowStore, WorkflowNavigator} from '../workflows';
 
-import DashboardScreen from './_screens/Dashboard';
-import PatientDashboard from './_screens/PatientDashboard';
-import InvestigationsDashboardScreen from './_screens/InvestigationDashboard';
-import MedicationsDashboardScreen from './_screens/MedicationDashboard';
-import ReportSummaryScreen from './_screens/ReportSummary';
+import DashboardScreen from './screens/Dashboard';
+import PatientDashboard from './screens/PatientDashboard';
+import InvestigationsDashboardScreen from './screens/InvestigationDashboard';
+import MedicationsDashboardScreen from './screens/MedicationDashboard';
+import ReportSummaryScreen from './screens/ReportSummary';
 
-import ViewAppointmentsScreen from './_screens/ViewAppointments';
-import ViewVisitScreen from './_screens/ViewVisit';
-import ViewPatientScreen from './_screens/ViewPatient';
-import ViewInvestigationScreen from './_screens/ViewInvestigation';
+import ViewAppointmentsScreen from './screens/ViewAppointments';
+import ViewVisitScreen from './screens/ViewVisit';
+import ViewPatientScreen from './screens/ViewPatient';
+import ViewInvestigationScreen from './screens/ViewInvestigation';
 
-import EditPatientScreen from './_screens/EditPatient';
-import MedicationMapScreen from './_screens/MedicationMap';
-import RegisterNewPatientScreen from './_screens/RegisterNewPatient';
-import ReportMissedAppointmentScreen from './_screens/ReportMissedAppointment';
+import EditPatientScreen from './screens/EditPatient';
+import MedicationMapScreen from './screens/MedicationMap';
+import RegisterNewPatientScreen from './screens/RegisterNewPatient';
+import ReportMissedAppointmentScreen from './screens/ReportMissedAppointment';
 
-import MedicationDispenseScreen from './_screens/MedicationDispense';
-import MedicationRequestScreen from './_screens/MedicationRequest';
+import MedicationDispenseScreen from './screens/MedicationDispense';
+import MedicationRequestScreen from './screens/MedicationRequest';
 
 // import NewVisitEntryScreen from './_screens/BasicPatientIntake';
 // import HIVStageIntakeScreen from './_screens/HIVStageIntake';
 // import HIVAdherenceAssessmentScreen from './_screens/HIVAdherenceAssessment';
 // import ConcludeAssessmentScreen from './_screens/ConcludeAssessment';
 
-import MedicationVisit from './_screens/MedicationVisit';
-import MedicationStock from './_screens/MedicationStock';
+import MedicationVisit from './screens/MedicationVisit';
+import MedicationStock from './screens/MedicationStock';
 import * as ctc from '@elsa-health/emr/lib/ctc/ctc.types';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {List} from 'immutable';

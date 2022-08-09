@@ -15,13 +15,13 @@ import {
   HIVPatientIntakeAssessment,
   IntialPatientIntakeAssessment,
   PatientAdherenceAssessment,
-} from '../emr/types';
-import {removeWhiteSpace} from '../emr/utils';
-import {FirstPatientIntake} from '../_screens/BasicPatientIntake/BasicPatientIntake.screen';
-import {ConcludeAssessmentData} from '../_screens/ConcludeAssessment/ConcludeAssessment.screen';
-import {PatientAdherenceInfo} from '../_screens/HIVAdherenceAssessment/HIVAdherenceAssessment.screen';
-import {HIVPatientIntake} from '../_screens/HIVStageIntake/HIVStageIntake.screen';
-import {PatientFormType} from '../_screens/RegisterNewPatient';
+} from '../emr-helpers/types';
+import {removeWhiteSpace} from '../emr-helpers/utils';
+import {FirstPatientIntake} from '../screens/BasicPatientIntake/BasicPatientIntake.screen';
+import {ConcludeAssessmentData} from '../screens/ConcludeAssessment/ConcludeAssessment.screen';
+import {PatientAdherenceInfo} from '../screens/HIVAdherenceAssessment/HIVAdherenceAssessment.screen';
+import {HIVPatientIntake} from '../screens/HIVStageIntake/HIVStageIntake.screen';
+import {PatientFormType} from '../screens/RegisterNewPatient';
 import {arv, investigationRequest, medRequest, stanMed} from './basic';
 
 /**

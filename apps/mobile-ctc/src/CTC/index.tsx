@@ -1,29 +1,29 @@
 import React from 'react';
 
-import DashboardScreen from './_screens/Dashboard';
-import PatientDashboard from './_screens/PatientDashboard';
-import InvestigationsDashboardScreen from './_screens/InvestigationDashboard';
-import MedicationsDashboardScreen from './_screens/MedicationDashboard';
-import ReportSummaryScreen from './_screens/ReportSummary';
+import DashboardScreen from './screens/Dashboard';
+import PatientDashboard from './screens/PatientDashboard';
+import InvestigationsDashboardScreen from './screens/InvestigationDashboard';
+import MedicationsDashboardScreen from './screens/MedicationDashboard';
+import ReportSummaryScreen from './screens/ReportSummary';
 
-import ViewAppointmentsScreen from './_screens/ViewAppointments';
-import ViewVisitScreen from './_screens/ViewVisit';
-import ViewPatientScreen from './_screens/ViewPatient';
-import ViewInvestigationScreen from './_screens/ViewInvestigation';
+import ViewAppointmentsScreen from './screens/ViewAppointments';
+import ViewVisitScreen from './screens/ViewVisit';
+import ViewPatientScreen from './screens/ViewPatient';
+import ViewInvestigationScreen from './screens/ViewInvestigation';
 
-import MedicationMapScreen from './_screens/MedicationMap';
-import RegisterNewPatientScreen from './_screens/RegisterNewPatient';
-import ReportMissedAppointmentScreen from './_screens/ReportMissedAppointment';
+import MedicationMapScreen from './screens/MedicationMap';
+import RegisterNewPatientScreen from './screens/RegisterNewPatient';
+import ReportMissedAppointmentScreen from './screens/ReportMissedAppointment';
 
-import MedicationDispenseScreen from './_screens/MedicationDispense';
-import MedicationRequestScreen from './_screens/MedicationRequest';
-import EditPatientScreen from './_screens/EditPatient';
+import MedicationDispenseScreen from './screens/MedicationDispense';
+import MedicationRequestScreen from './screens/MedicationRequest';
+import EditPatientScreen from './screens/EditPatient';
 
 // import {withFlowContext} from '@elsa-ui/react-native-workflows';
 import uuid from 'react-native-uuid';
 
 import {ElsaProvider} from '../provider/backend';
-import {ARV, Investigation, Medication as Med} from 'elsa-health-data-fns/lib';
+import {ARV, Investigation} from 'elsa-health-data-fns/lib';
 
 // TODO: change implementation of this
 import {withFlowContext} from '@elsa-ui/react-native-workflows';
@@ -35,19 +35,18 @@ import {ToastAndroid} from 'react-native';
 import _ from 'lodash';
 import {getOrganizationFromProvider, reference} from './actions/basic';
 import {queryPatientsFromSearch} from './actions/ui';
-import {CTC} from './emr/types';
-import MedicationVisit from './_screens/MedicationVisit';
-import MedicationStock from './_screens/MedicationStock';
+import {CTC} from './emr-helpers/types';
+import MedicationVisit from './screens/MedicationVisit';
+import MedicationStock from './screens/MedicationStock';
 import {
   useListenCollection,
   useAttachAppointmentsListener,
-} from './emr/react-hooks';
+} from './emr-helpers/react-hooks';
 
 import * as Sentry from '@sentry/react-native';
-import {queryCollection} from './emr/actions';
-import {convertDMYToDate, removeWhiteSpace} from './emr/utils';
-import {differenceInDays, format, isAfter} from 'date-fns';
-import {getEMR, Seeding} from './emr/store';
+import {convertDMYToDate, removeWhiteSpace} from './emr-helpers/utils';
+import {format, isAfter} from 'date-fns';
+import {getEMR, Seeding} from './emr-helpers/store';
 import {
   AppointmentRequest,
   Ingredient,
@@ -60,20 +59,18 @@ import {
   executeChain,
   InvestigationResult,
   Observation,
-  MedicationRequest,
   MedicationDispense,
 } from '@elsa-health/emr';
 import {date, utcDateString} from '@elsa-health/emr/lib/utils';
 
 // Migration code
-import {Migration} from './emr/temp.migrate';
 
 import SplashScreen from 'react-native-splash-screen';
 import {Stack, useWorkflowStore, WorkflowProvider} from './workflow';
 import produce from 'immer';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import ConnectionSync from './emr/sync';
-import {Toast, ToastPortal} from './component/toast-message';
+import ConnectionSync from './components/connection-sync';
+import {Toast, ToastPortal} from './components/toast-message';
 
 function practitioner(ep: ElsaProvider): CTC.Doctor {
   return {
@@ -192,16 +189,13 @@ function App({
   );
 
   React.useEffect(() => {
-    // queryCollection(Emr.collection('visits'))
+    // query(Emr.collection('visits'))
     //   .then(d => d.map(x => x.associatedAppointmentResponse))
     //   .then(console.log);
 
     if (organization) {
       // Perform seeding for those new accounts
-      Seeding(Emr, organization).then(() =>
-        // include code to migrate over the records
-        Migration(Emr),
-      );
+      Seeding(Emr, organization);
     } else {
       console.error("You don't have an organization");
     }
@@ -602,7 +596,7 @@ function App({
             },
             actions: ({navigation}) => ({
               async fetchPublicStock() {
-                const d = await queryCollection(Emr.collection('publicStock'));
+                const d = await query(Emr.collection('publicStock'));
                 return d;
               },
               onGoToUpdateStock() {
@@ -1165,7 +1159,7 @@ function App({
                 });
               },
               async nextAppointment(patientId: string) {
-                const after = await queryCollection(
+                const after = await query(
                   Emr.collection('appointment-requests'),
                   {
                     where: {
@@ -1236,7 +1230,7 @@ function App({
               },
               async fetchVisits(patientId) {
                 return (
-                  await queryCollection(Emr.collection('visits'), {
+                  await query(Emr.collection('visits'), {
                     where: {
                       $and: [
                         item => item.subject.id === patientId,
@@ -1255,10 +1249,9 @@ function App({
                       navigation.navigate('ctc.view-visit', {visit: d});
                     },
                     onEditVisit: async () => {
-                      const patients = await queryCollection(
-                        Emr.collection('patients'),
-                        {where: item => item.id === patientId},
-                      );
+                      const patients = await query(Emr.collection('patients'), {
+                        where: item => item.id === patientId,
+                      });
 
                       const patient = patients.get(0) ?? null;
 

@@ -16,8 +16,10 @@
 			"**/@elsa-health/emr/**",
 			"**/dotenv/",
 			"**/zod/",
-			"**/elsa-ctc-web/",
-			"**/elsa-ctc-web/**"
+			"**/jest/",
+			"**/jest/**",
+			"**/dacc-server/",
+			"**/dacc-server/**"
 		]
 	},
 	"scripts": {
