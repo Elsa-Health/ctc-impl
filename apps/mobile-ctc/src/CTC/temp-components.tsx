@@ -25,7 +25,7 @@ import {useAsyncRetry} from 'react-use';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {format, isBefore} from 'date-fns';
 import TextInputMask from 'react-native-text-input-mask';
-import {useController, Validate, ValidateResult} from 'react-hook-form';
+import {useController} from 'react-hook-form';
 
 import CollapsibleView from 'react-native-collapsible';
 
@@ -147,7 +147,6 @@ export function Block({
  */
 export function SimpleDate({
   value,
-  onChangeValue,
 }: {
   value: {year?: string; month?: string; date?: string};
   onChangeValue: (d: string) => void;
@@ -189,7 +188,7 @@ export function SimpleDate({
   );
 }
 
-function iconToggle(
+export function iconToggle(
   name: 'close' | 'check' | 'search' | 'keyboard-arrow-down',
   style: object = {},
 ) {

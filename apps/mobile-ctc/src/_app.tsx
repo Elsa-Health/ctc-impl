@@ -11,7 +11,6 @@ import {ThemeProvider} from '@elsa-ui/react-native/theme';
 
 import {LanguageProvider} from '@elsa-ui/react-native-workflows/utilities/locale';
 
-import _ from 'lodash';
 import {
   ApplicationProvider,
   authenticate,
@@ -200,7 +199,7 @@ function CodePushWrapper({children}: {children: React.ReactNode}) {
   );
 }
 
-function App() {
+export function App() {
   return (
     <ThemeProvider
       theme={theme =>

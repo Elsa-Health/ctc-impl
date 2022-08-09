@@ -1,5 +1,4 @@
 import React from 'react';
-import {useAsyncFn} from 'react-use';
 import {authenticateCredential, ElsaProvider, Identity} from './backend';
 
 import produce from 'immer';

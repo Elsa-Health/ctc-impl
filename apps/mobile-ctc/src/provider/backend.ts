@@ -13,11 +13,11 @@ type PlatformAction =
   | 'prescription.add'
   | 'read'
   | 'write';
-type PlatformRole = LabsRole | AddoRole | CtcRole;
+// type PlatformRole = LabsRole | AddoRole | CtcRole;
 
-type LabsRole = 'lab-tech';
-type AddoRole = 'addo-guy';
-type CtcRole = 'doctor';
+// type LabsRole = 'lab-tech';
+// type AddoRole = 'addo-guy';
+// type CtcRole = 'doctor';
 
 export async function authenticateCredential(
   firestore: FirebaseFirestoreTypes.Module,
@@ -33,7 +33,7 @@ export async function authenticateCredential(
       message: "Profile doesn't exist",
     };
   }
-  console.log('Profile exists... Pulling API key');
+  // console.log('Profile exists... Pulling API key');
 
   // Getting information from profile
   const {API_KEY, platform} = _profile.data() as ElsaDBTypes.Profile;
@@ -47,7 +47,7 @@ export async function authenticateCredential(
     };
   }
 
-  console.log('API Key pulled.. Pulling Credentials');
+  // console.log('API Key pulled.. Pulling Credentials');
   // Information to validate what can be done by the user
   const {actions, platforms} = _api.data() as ElsaDBTypes.ApiKey;
 
@@ -100,7 +100,7 @@ export async function authenticateProvider(
       message: "Profile doesn't exist",
     };
   }
-  console.log('Profile exists... Pulling API key');
+  // console.log('Profile exists... Pulling API key');
 
   // Getting information from profile
   const {API_KEY, platform} = _profile.data() as ElsaDBTypes.Profile;
@@ -114,7 +114,7 @@ export async function authenticateProvider(
     };
   }
 
-  console.log('API Key pulled.. Pulling Credentials');
+  // console.log('API Key pulled.. Pulling Credentials');
   // Information to validate what can be done by the user
   const {actions, platforms} = _api.data() as ElsaDBTypes.ApiKey;
 
@@ -155,11 +155,11 @@ export async function authenticateProvider(
     };
   }
 
-  console.log('Credentials Pulled.. Confirming Facility');
+  // console.log('Credentials Pulled.. Confirming Facility');
 
   const fac = await firestore.collection('facilities').doc(facilityId).get();
 
-  console.log({facilityId});
+  // console.log({facilityId});
   if (!fac.exists) {
     console.log('[FACILITY ID]: ', facilityId);
     throw {
@@ -174,7 +174,7 @@ export async function authenticateProvider(
     throw new Error(`${facilityId} is MISSING (not defined)`);
   }
 
-  console.log('Facility confirmed.. Creating Session and Finishing up');
+  // console.log('Facility confirmed.. Creating Session and Finishing up');
 
   // Creates the session for the user
   const uSession = session();
@@ -201,7 +201,7 @@ export async function authenticateProvider(
   //   throw {code: 'elsa/dunno', message: 'Unable log user in'};
   // }
 
-  console.log('Done!');
+  // console.log('Done!');
 
   return new ElsaProvider({
     actions: actions || ['read', 'write'],
