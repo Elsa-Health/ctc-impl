@@ -6,9 +6,9 @@ import Screen from './index';
 import {ThemeProvider} from '@elsa-ui/react-native/theme';
 import {Patient} from '@elsa-health/emr';
 
-jest.useFakeTimers(); // jest.useFakeTimers('legacy') for jest >= 27
-// call animation
-jest.runAllTimers();
+// jest.useFakeTimers(); // jest.useFakeTimers('legacy') for jest >= 27
+// // call animation
+// jest.runAllTimers();
 
 describe('Edit Patient Screen', () => {
   test('Renders correctly', () => {

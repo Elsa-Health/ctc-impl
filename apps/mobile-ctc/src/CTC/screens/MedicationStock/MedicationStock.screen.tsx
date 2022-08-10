@@ -45,6 +45,7 @@ import {format} from 'date-fns';
 import {date} from '@elsa-health/emr/lib/utils';
 
 import {FlashList} from '@shopify/flash-list';
+import {List} from 'immutable';
 
 const SingleStockItem = z.object({
   count: z.string(),
@@ -81,7 +82,12 @@ type ARVMap = {
 type F = keyof ARVMap;
 type V = ARVMap[F];
 
-const prepareReport = stock => {
+/**
+ * Prepares the values that are needed to construct the reporting information
+ * @param stock
+ * @returns
+ */
+const prepareReport = (stock = List<any>()) => {
   return {
     arvs: Object.fromEntries(
       stock

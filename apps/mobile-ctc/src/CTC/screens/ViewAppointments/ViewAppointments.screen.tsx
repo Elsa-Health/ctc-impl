@@ -14,7 +14,7 @@ import {
 import {WorkflowScreenProps} from '@elsa-ui/react-native-workflows';
 
 import {format, isAfter} from 'date-fns';
-import {Appointment, UseAppointments} from '../../emr-helpers/react-hooks';
+import {Appointment} from '../../emr-helpers/react-hooks';
 import {groupByFn} from '../MedicationStock/helpers';
 import {date} from '@elsa-health/emr/lib/utils';
 import {useWorkflowStore} from '../../workflow';
@@ -25,12 +25,7 @@ const nameMap = {
   completed: 'Completed Appointments',
 };
 
-export default function ViewAppointmentsScreen({}: WorkflowScreenProps<
-  UseAppointments,
-  {
-    onNext: () => void;
-  }
->) {
+export default function ViewAppointmentsScreen() {
   const {spacing} = useTheme();
 
   // shared data

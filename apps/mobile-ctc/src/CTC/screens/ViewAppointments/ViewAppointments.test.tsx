@@ -2,10 +2,15 @@ import React from 'react';
 
 import {render} from '@testing-library/react-native';
 import Screen from './index';
+import {WorkflowProvider} from '../../workflow';
 
-describe('Register New Patient Screen', () => {
+describe('View Appointments Screen', () => {
   test('Renders correctly', () => {
     // ....
-    render(<Screen actions={{onNext() {}}} entry={{}} />);
+    render(
+      <WorkflowProvider>
+        <Screen />
+      </WorkflowProvider>,
+    );
   });
 });

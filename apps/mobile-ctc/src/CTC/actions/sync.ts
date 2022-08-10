@@ -1,12 +1,6 @@
 import {Set} from 'immutable';
 import _ from 'lodash';
-import {
-  addDocs,
-  collection,
-  Document,
-  getDocs,
-  setDocs,
-} from 'papai/collection';
+import {collection, getDocs, setDocs} from 'papai/collection';
 import {Store} from 'papai/collection/core';
 import {HybridLogicalClock} from 'papai/distributed/clock';
 import {StateTrackingBox} from 'papai/distributed/store';

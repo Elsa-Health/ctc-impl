@@ -2,7 +2,6 @@ import {buildWorkflowStore, WorkflowNavigator} from '../workflows';
 
 import DashboardScreen from './screens/Dashboard';
 import PatientDashboard from './screens/PatientDashboard';
-import InvestigationsDashboardScreen from './screens/InvestigationDashboard';
 import MedicationsDashboardScreen from './screens/MedicationDashboard';
 import ReportSummaryScreen from './screens/ReportSummary';
 
@@ -35,7 +34,6 @@ export type WorkflowParamList = WorkflowNavigator<{
   'ctc.dashboard': typeof DashboardScreen;
   // DashboardScreen
   'ctc.patient-dashboard': typeof PatientDashboard;
-  'ctc.investigations-dashboard': typeof InvestigationsDashboardScreen;
   'ctc.medications-dashboard': typeof MedicationsDashboardScreen;
 
   'ctc.view-investigation': typeof ViewInvestigationScreen<ctc.InvestigationRequest>;

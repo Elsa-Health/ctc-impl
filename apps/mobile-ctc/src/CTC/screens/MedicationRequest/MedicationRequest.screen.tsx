@@ -1,9 +1,9 @@
 import React from 'react';
 
-import {Layout, Text} from '@elsa-ui/react-native/components';
+import {Layout} from '@elsa-ui/react-native/components';
 import {useTheme} from '@elsa-ui/react-native/theme';
-import {ScrollView, View} from 'react-native';
-import {Button, RadioButton, TextInput} from 'react-native-paper';
+import {ScrollView} from 'react-native';
+import {Button} from 'react-native-paper';
 import {
   Block,
   // Column,
@@ -15,7 +15,6 @@ import {
 import {WorkflowScreenProps} from '@elsa-ui/react-native-workflows';
 // import {MedicaDisp, MedicaReq} from '../../emr/hook';
 
-import {ARV, Medication} from 'elsa-health-data-fns/lib';
 import {format} from 'date-fns';
 import {ctc} from '@elsa-health/emr';
 import {MedicationStatusComponent} from './components/medication-status';

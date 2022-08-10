@@ -78,7 +78,7 @@ export default function PatientDashboardScreen({
       onChangeSearchText(entry.searchText);
       searchTextInputRef.current?.focus();
     }
-  }, [onChangeSearchText, resetSearch, entry.searchText]);
+  }, [onChangeSearchText, resetSearch, entry?.searchText]);
 
   return (
     <Layout title="Patient Dashboard" style={{padding: 0}}>

@@ -4,13 +4,7 @@ import {ScrollView, View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {Layout, Text} from '@elsa-ui/react-native/components';
-import {
-  Block,
-  Column,
-  Row,
-  Section,
-  TouchableItem,
-} from '../../temp-components';
+import {Column, Row, Section, TouchableItem} from '../../temp-components';
 import {useTheme} from '@elsa-ui/react-native/theme';
 import {IconButton, Menu, Searchbar} from 'react-native-paper';
 import {ElsaColorableIcon} from '@elsa-ui/react-native/visuals/vectors';
@@ -21,7 +15,7 @@ export default function DashboardScreen({
   actions: $,
 }: WorkflowScreenProps<
   {
-    fullName: string;
+    fullName?: string;
   },
   {
     logout: () => Promise<void>;

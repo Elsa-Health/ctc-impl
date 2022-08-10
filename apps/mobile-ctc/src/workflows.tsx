@@ -1,7 +1,7 @@
 import React from 'react';
 
 import create from 'zustand';
-// import createContext from 'zustand/context';
+import createContext from 'zustand/context';
 import produce from 'immer';
 
 import {
@@ -9,6 +9,7 @@ import {
   FunctionListMap,
   StateMap,
 } from '@elsa-ui/react-native-workflows';
+import {NavigationProp, RouteProp} from '@react-navigation/native';
 
 /** ------- */
 
@@ -83,7 +84,7 @@ export const withFlowContext =
   }) => {
     const entryData = React.useMemo(
       () => ({...config.entry, ...(route?.params || {})}),
-      [config.entry, route?.params],
+      [route?.params],
     );
     return (
       <WfScreen
@@ -96,40 +97,51 @@ export const withFlowContext =
 // create context of the application
 // const {Provider, useStore: useWorkflowStore} = createContext<WorkflowStore>();
 
-export function buildWorkflowStore<KV extends KeyValue>() {
+export function buildWorkflowStore<KV extends KeyValue>(
+  workflowInitialState: KV = {} as KV,
+) {
   // create context of the application
   // const {Provider, useStore: useWorkflowStore} =
   //   createContext<WorkflowStore<KV>>();
+  const {Provider, useStore: useWorkflowStore} =
+    createContext<WorkflowStore<KV>>();
 
   // Create a store
   // const createStore = () =>
-  const useWorkflowStore = create<WorkflowStore<KV>>(set => ({
-    value: {},
-    setValue: fn =>
-      set(s =>
-        produce(s, df => {
-          if (typeof fn === 'function') {
-            df.value = fn(s.value);
-          } else {
-            df.value = fn;
-          }
-        }),
-      ),
-  }));
+  const createWorkflowStore = (initialState: KV) => () =>
+    create<WorkflowStore<KV>>(set => ({
+      value: initialState,
+      setValue: fn =>
+        set(s =>
+          produce(s, df => {
+            if (typeof fn === 'function') {
+              df.value = fn(s.value);
+            } else {
+              df.value = fn;
+            }
+          }),
+        ),
+    }));
 
   /**
    *
    * @param param0
    * @returns
    */
-  const WorkflowProvider = ({children}: {children: React.ReactNode}) => (
-    <>{children}</>
+  const WorkflowProvider = ({
+    initialState,
+    children,
+  }: {
+    initialState?: KV;
+    children: React.ReactNode;
+  }) => (
+    <Provider
+      createStore={createWorkflowStore(
+        Object.assign(workflowInitialState, initialState ?? ({} as KV)),
+      )}>
+      {children}
+    </Provider>
   );
-  //  React.memo(
-  //   ({children}: {children: React.ReactNode}) => {
-  //     return <Provider createStore={createStore}>{children}</Provider>;
-  //   },
-  // );
 
   return {WorkflowProvider, useWorkflowStore};
 }

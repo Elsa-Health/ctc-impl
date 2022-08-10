@@ -6,6 +6,8 @@ import Screen from './index';
 describe('Medication Stock Dashboard Screen', () => {
   test('Renders correctly', () => {
     // ....
-    render(<Screen />);
+    render(
+      <Screen actions={{onGoToManageStock() {}, onSeeOtherMedications() {}}} />,
+    );
   });
 });

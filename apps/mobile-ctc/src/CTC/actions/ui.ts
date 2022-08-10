@@ -1,17 +1,16 @@
+import {type ctc} from '@elsa-health/emr';
+import {query} from 'papai/collection';
 import {CollectionNode} from 'papai/collection/core';
-import {queryCollection} from '../emr-helpers/actions';
-import {EMRModule} from '../emr-helpers/store';
-import {CTC} from '../emr-helpers/types';
 import {lower, removeWhiteSpace} from '../emr-helpers/utils';
 import {SearchQuery} from '../screens/PatientDashboard/PatientDashboard.screen';
 
 export async function queryPatientsFromSearch<T>(
-  patientCollection: CollectionNode<CTC.Patient>,
-  query: SearchQuery,
-  item: (p: CTC.Patient) => T,
+  patientCollection: CollectionNode<ctc.Patient>,
+  searchQuery: SearchQuery,
+  item: (p: ctc.Patient) => T,
 ) {
   const orQueries: Array<(p: CTC.Patient) => boolean> = [];
-  const {input, searchIn} = query;
+  const {input, searchIn} = searchQuery;
   if (input !== undefined) {
     // add function to search ID
     orQueries.push(p => {
@@ -24,7 +23,7 @@ export async function queryPatientsFromSearch<T>(
     });
 
     // add function to search from name
-    if (Boolean(searchIn?.name)) {
+    if (searchIn?.name) {
       orQueries.push(p => {
         const firstName = lower((p.info?.firstName ?? '').trim());
         const familyName = lower((p.info?.familyName ?? '').trim());
@@ -39,7 +38,7 @@ export async function queryPatientsFromSearch<T>(
     }
 
     // search phoneNumber
-    if (Boolean(searchIn?.phone)) {
+    if (searchIn?.phone) {
       console.log('Phone Q');
       orQueries.push(p => {
         const phoneNumber = p.contact?.phoneNumber ?? '';
@@ -49,7 +48,7 @@ export async function queryPatientsFromSearch<T>(
   }
 
   // console.log(query);
-  return queryCollection(patientCollection, {
+  return query(patientCollection, {
     where: {
       $or: orQueries,
     },

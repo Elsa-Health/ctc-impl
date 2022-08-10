@@ -1,4 +1,5 @@
 /** String related utils */
+import type * as P from '@elsa-health/emr/health.types/v1/_primitives';
 
 export function removeWhiteSpace(text: string) {
   return text.replace(/\s+/g, '').trim();
@@ -8,7 +9,7 @@ export function lower(text: string) {
   return text.toLowerCase();
 }
 
-export function convertDMYToDate(date: DDMMYYYYDateString): Date {
+export function convertDMYToDate(date: P.DDMMYYYYDateString): Date {
   const vals = removeWhiteSpace(date).split('/');
 
   if (vals.length !== 3) {

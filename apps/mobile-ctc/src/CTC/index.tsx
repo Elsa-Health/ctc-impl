@@ -2,7 +2,6 @@ import React from 'react';
 
 import DashboardScreen from './screens/Dashboard';
 import PatientDashboard from './screens/PatientDashboard';
-import InvestigationsDashboardScreen from './screens/InvestigationDashboard';
 import MedicationsDashboardScreen from './screens/MedicationDashboard';
 import ReportSummaryScreen from './screens/ReportSummary';
 
@@ -33,9 +32,9 @@ import {doc, setDoc, getDocs, query, updateDoc} from 'papai/collection';
 import {List} from 'immutable';
 import {ToastAndroid} from 'react-native';
 import _ from 'lodash';
-import {getOrganizationFromProvider, reference} from './actions/basic';
+
 import {queryPatientsFromSearch} from './actions/ui';
-import {CTC} from './emr-helpers/types';
+import {referred as reference, type ctc as CTC} from '@elsa-health/emr';
 import MedicationVisit from './screens/MedicationVisit';
 import MedicationStock from './screens/MedicationStock';
 import {
@@ -71,6 +70,36 @@ import produce from 'immer';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ConnectionSync from './components/connection-sync';
 import {Toast, ToastPortal} from './components/toast-message';
+
+export function getOrganizationFromProvider(
+  ep: ElsaProvider,
+): ctc.Organization {
+  const {name, phoneNumber, address, ctcCode, website} = ep.facility;
+
+  return {
+    id: name + (ctcCode ?? ''),
+    active: true,
+    associatedOrganization: null,
+    code: null,
+    // Get this information
+    createdAt: new Date().toUTCString(),
+    email: null,
+    identifier:
+      ctcCode === undefined
+        ? null
+        : {
+            ctcCode,
+          },
+    name,
+    resourceType: 'Organization',
+    phoneNumber,
+    extendedData: {
+      geo: null,
+      address: address ?? null,
+      website: website ?? null,
+    },
+  };
+}
 
 function practitioner(ep: ElsaProvider): CTC.Doctor {
   return {
@@ -1333,14 +1362,6 @@ function App({
                 resourceType: 'Visit',
               },
             },
-          })}
-        />
-        <Stack.Screen
-          name="ctc.investigations-dashboard"
-          component={withFlowContext(InvestigationsDashboardScreen, {
-            actions: ({navigation}) => ({
-              onNext() {},
-            }),
           })}
         />
         <Stack.Screen
