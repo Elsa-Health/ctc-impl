@@ -40,7 +40,7 @@ import _ from 'lodash';
 import {Controller, useForm} from 'react-hook-form';
 
 import z from 'zod';
-import {useWorkflowStore} from '../../workflow';
+import {useWorkflowApi} from '../../workflow';
 import {format} from 'date-fns';
 import {date} from '@elsa-health/emr/lib/utils';
 
@@ -134,12 +134,12 @@ export default function MedicationStockScreen({
   // console.log('TOOO');
 
   const [report, set] = React.useState(
-    prepareReport(useWorkflowStore.getState().value['stock']),
+    prepareReport(useWorkflowApi.getState().value['stock']),
   );
 
   React.useEffect(() => {
     // console.log('PING-PONG');
-    const unsubscribe = useWorkflowStore.subscribe(r => {
+    const unsubscribe = useWorkflowApi.subscribe(r => {
       const stock = r?.value?.stock;
       if (stock === undefined) {
         return;

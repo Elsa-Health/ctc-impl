@@ -98,13 +98,16 @@ export const withFlowContext =
 // const {Provider, useStore: useWorkflowStore} = createContext<WorkflowStore>();
 
 export function buildWorkflowStore<KV extends KeyValue>(
-  workflowInitialState: KV = {} as KV,
+  workflowInitialState: Partial<KV> = {} as Partial<KV>,
 ) {
   // create context of the application
   // const {Provider, useStore: useWorkflowStore} =
   //   createContext<WorkflowStore<KV>>();
-  const {Provider, useStore: useWorkflowStore} =
-    createContext<WorkflowStore<KV>>();
+  const {
+    Provider,
+    useStore: useWorkflowStore,
+    useStoreApi: useWorkflowApi,
+  } = createContext<WorkflowStore<KV>>();
 
   // Create a store
   // const createStore = () =>
@@ -137,11 +140,14 @@ export function buildWorkflowStore<KV extends KeyValue>(
   }) => (
     <Provider
       createStore={createWorkflowStore(
-        Object.assign(workflowInitialState, initialState ?? ({} as KV)),
+        Object.assign(
+          workflowInitialState,
+          initialState ?? ({} as Partial<KV>),
+        ),
       )}>
       {children}
     </Provider>
   );
 
-  return {WorkflowProvider, useWorkflowStore};
+  return {WorkflowProvider, useWorkflowStore, useWorkflowApi};
 }

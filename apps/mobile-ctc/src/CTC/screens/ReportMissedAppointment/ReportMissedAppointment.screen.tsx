@@ -15,7 +15,7 @@ import {ScrollView, View} from 'react-native';
 
 import * as z from 'zod';
 import {useAsyncFn} from 'react-use';
-import {PatientQuery} from '../../misc';
+import {PatientQuery} from '../../components/patient-query';
 
 const MissedPatientReport = z.object({
   patientId: z.string(),

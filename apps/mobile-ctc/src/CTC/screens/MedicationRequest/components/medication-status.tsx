@@ -1,5 +1,4 @@
 import {ctc} from '@elsa-health/emr';
-import {Text} from '@elsa-ui/react-native/components';
 import {List} from 'immutable';
 import React from 'react';
 import {
@@ -7,7 +6,7 @@ import {
   isStockLow,
 } from '../../../components/stocked-medication-list';
 import {Section} from '../../../temp-components';
-import {useWorkflowStore} from '../../../workflow';
+import {useWorkflowApi} from '../../../workflow';
 
 type AvailabilityStatus = 'available' | 'unavailable' | 'unknown';
 
@@ -81,14 +80,11 @@ export function MedicationStatusComponent({
   medication: ctc.ARVMedication;
 }) {
   const [stockStatus, set] = React.useState(() =>
-    checkStockStatus(
-      medication,
-      useWorkflowStore.getState().value[WF_STOCK_KEY],
-    ),
+    checkStockStatus(medication, useWorkflowApi.getState().value[WF_STOCK_KEY]),
   );
 
   React.useEffect(() => {
-    const unsub = useWorkflowStore.subscribe(sx => {
+    const unsub = useWorkflowApi.subscribe(sx => {
       set(checkStockStatus(medication, sx.value[WF_STOCK_KEY]));
     });
 

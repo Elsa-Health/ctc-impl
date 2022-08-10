@@ -5,6 +5,7 @@ import {session} from './helper';
 
 import {isBefore} from 'date-fns';
 import {ElsaDBTypes, ElsaTypes, Serialized, ProviderSession} from './@types';
+import {identity} from 'lodash';
 
 type Platform = 'ctc' | 'addo' | 'labs';
 type PlatformAction =
@@ -339,35 +340,58 @@ export class ElsaProvider {
 }
 export type Identity = {profileId: string; credentialId: string};
 
-export const Identity = {
-  isParsable(str: string) {
-    return str.match(/[a-zA-Z0-9_-]@[a-zA-Z0-9_-]/g) !== null;
-  },
-  /**
-   *
-   * @param identity
-   * @returns
-   */
-  stringify: ({profileId, credentialId}: Identity): string => {
-    if (credentialId === undefined) {
-      return profileId;
-    }
+const Identity = ({
+  profileId,
+  credentialId,
+}: {
+  profileId: string;
+  credentialId: string;
+}) => {
+  if (!profileId || !credentialId) {
+    throw new Error('Invalid Identity');
+  }
 
-    return `${profileId}@${credentialId}`;
-  },
+  if (
+    ![profileId, credentialId]
+      .map(str => str.match(/^[a-zA-Z0-9_-]$/) !== null)
+      .some(v => v)
+  ) {
+    throw new Error('Invalid characters used for Identity');
+  }
 
-  /**
-   *
-   * @param identityString
-   * @returns
-   */
-  parse: (identityString: string): Identity => {
-    const vals = identityString.split('@');
-    // if (vals.length > 1) {
-    // 	return { profileId: vals[0] };
-    // }
+  return {
+    profileId,
+    credentialId,
+  };
+};
 
-    const [profileId, credentialId, ..._] = vals;
-    return {profileId, credentialId};
-  },
+Identity.isParsable = (str: string) => {
+  return str.match(/[a-zA-Z0-9_-]@[a-zA-Z0-9_-]/g) !== null;
+};
+/**
+ *
+ * @param identity
+ * @returns
+ */
+Identity.stringify = ({profileId, credentialId}: Identity): string => {
+  if (credentialId === undefined) {
+    return profileId;
+  }
+
+  return `${profileId}@${credentialId}`;
+};
+
+/**
+ *
+ * @param identityString
+ * @returns
+ */
+Identity.parse = (identityString: string): Identity => {
+  const vals = identityString.split('@');
+  // if (vals.length > 1) {
+  // 	return { profileId: vals[0] };
+  // }
+
+  const [profileId, credentialId, ..._] = vals;
+  return {profileId, credentialId};
 };

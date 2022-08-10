@@ -16,7 +16,7 @@ import {format} from 'date-fns';
 import produce from 'immer';
 import {CTCPatient} from '../../emr-helpers/types';
 import {useAsyncFn} from 'react-use';
-import {PatientQuery} from '../../misc';
+import {PatientQuery} from '../../components/patient-query';
 
 import {FlashList} from '@shopify/flash-list';
 

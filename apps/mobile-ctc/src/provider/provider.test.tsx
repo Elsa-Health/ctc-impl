@@ -1,10 +1,5 @@
 import {session} from './helper';
-import {
-  authenticateCredential,
-  authenticateProvider,
-  ElsaProvider,
-  Identity,
-} from './backend';
+import {ElsaProvider, Identity} from './backend';
 
 describe('Context', () => {
   //   test('', () => {
@@ -50,8 +45,8 @@ describe('backend', () => {
 
   test('Identity', () => {
     const identity: Identity = {
-      credentialId: '<credential>',
-      profileId: '<profile>',
+      credentialId: 'credential',
+      profileId: 'profile',
     };
 
     // ...

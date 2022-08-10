@@ -34,7 +34,7 @@ import _ from 'lodash';
 import {useForm, Controller} from 'react-hook-form';
 import Collapsible from 'react-native-collapsible';
 import {Investigation} from 'elsa-health-data-fns/lib';
-import {PatientQuery} from '../../misc';
+import {PatientQuery} from '../../components/patient-query';
 const DISTRICTS = [
   'Meru',
   'Arusha City',

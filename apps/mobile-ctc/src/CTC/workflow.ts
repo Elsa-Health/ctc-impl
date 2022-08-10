@@ -57,19 +57,20 @@ export type WorkflowParamList = WorkflowNavigator<{
 }>;
 
 // Setup the application
-const {WorkflowProvider, useWorkflowStore} = buildWorkflowStore<{
-  appointments: List<any>;
-  visits: List<ctc.Visit>;
-  patients: List<ctc.Patient>;
-  'appointment-requests': List<ctc.AppointmentRequest>;
-  'appointment-responses': List<ctc.AppointmentResponse>;
-  'medication-requests': List<ctc.MedicationRequest>;
-  stock: any;
-}>();
+const {WorkflowProvider, useWorkflowStore, useWorkflowApi} =
+  buildWorkflowStore<{
+    appointments: List<any>;
+    visits: List<ctc.Visit>;
+    patients: List<ctc.Patient>;
+    'appointment-requests': List<ctc.AppointmentRequest>;
+    'appointment-responses': List<ctc.AppointmentResponse>;
+    'medication-requests': List<ctc.MedicationRequest>;
+    stock: any;
+  }>();
 
 const Stack = createNativeStackNavigator<WorkflowParamList>();
 
 // Something here
-export {WorkflowProvider, Stack, useWorkflowStore};
+export {WorkflowProvider, Stack, useWorkflowStore, useWorkflowApi};
 
 // start
