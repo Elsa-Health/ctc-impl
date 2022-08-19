@@ -1,86 +1,80 @@
 ![ELSA HEALTH](https://www.elsa.health/elsa-logo.png)
 
-# Elsa Health CTC Project
+**Elsa for CTC** is a project combining different tools and programs choerographed to improve the effectiveness of Health Care providers to take care of PLWA, all the while embracing digital systems.
 
-[Badge]
+Things we care about:
 
-This project created to: \*\* create useful digital CTC network
+-   Simple interfacing of personnel to the system
+-   Lowering barrier of entry in tech for health
 
-This repo has 3 parts
+## About
 
--   Mobile CTC
--   Server
--   Emr
+This repository contains the documents and source code that talk about the system responsible for creating the Elsa for CTC Project. This README is intented to brush over the key things to look for within the repository.
 
-<img src="/resources/basic-layout.png" />
+The different elements that make up the project include:
+
+-   A Mobile Application
+-   A Synchronization Server
+-   And a EMR Storage module
+-   Dashboard System
+
+An in-depth explanation for this can be found [here](docs/architecture.md). But in the meantime, here's a photo showing the basic structure of the system
+
+![[basic-layout]](/resources/basic-layout-0.png)
+
+## Documentation
+
+Most of the introductory information about the Elsa for CTC can be found in this README.
+
+But when higlighting more specific information, you might want to check out the other linked documents below:
+
+-   [About - The What, Why?](docs/about.md)
+-   [Architecture (L1, L2, L3)](docs/architecture.md)
+-   [For Developers](docs/for_developers.md)
 
 ## Getting Started
 
-Project was bootstrapped with `turborepo`, meaning most of the interactions with the rest of the project would be more close to a `yarn` workspaces
+### Project Requirements
+
+To be able to build the project on your successfully on your end. You'll need:
+
+-   [NodeJS](https://nodejs.org/en/download/) (at least v14, preferable [LTS](https://nodejs.org/en/about/releases/#:~:text=LTS%20release%20status%20is%20%22long,Release))
+-   [yarn](https://classic.yarnpkg.com/lang/en/docs/install/) (at least v1.22.14) - This is important as the project monorepo was made for yarn. (npm, or pnpm might not work)
+-   [OpenJDK 11](https://adoptium.net/temurin/releases/?version=11) (or any A Java Development Kit and Runtime)
+-   [Android SDK Platform Tools](https://developer.android.com/studio/releases/platform-tools)
+
+\*If you'd want to development on top of what currently exists. You might to also include:
+
+-   Emulator application ([Android Studio](https://developer.android.com/studio) or [Genymotion](https://www.genymotion.com/))
+-   A code editor of your choice ([VSCode](https://code.visualstudio.com/) is great!)
 
 ### Installation
 
-When cloning the project from this point, it shouldn't also automatically pull the repositories from the submodules as well (i.e project [emr](https://github.com/Elsa-Health/emr-impl) and [server](https://github.com/Elsa-Health/dacc-server-impl))
-
-From that point, start by installing project dependencies
+After acquiring the above requirements, and make the appropriate configurations for each application (like setting `export ANDROID_SDK_ROOT=`), navigate to the project folder throught the terminal and install the project by running:
 
 ```bash
-yarn
+yarn install
 ```
 
-### Development
+That's really it!
 
-#### App
+### Structure
 
-To launch the mobile application for development, make sure your device is plugged in or your are running an emulator, then run:
+The project is a [Mono-repository (monorepo)](https://en.wikipedia.org/wiki/Monorepo) created with [Turborepo](https://turborepo.org/). Making it easier to house and work with the different building blocks that make up the entire project.
+
+The project is split into 4 repositories:
+
+-   [`mobile-ctc`](/apps/mobile-ctc) - The main repository housing the mobile application that is used by the health care providers to interact with the system
+-   [`dacc-server`](/apps/dacc-server)- The repository housing the server that is used to sync the data between different `mobile-ctc` applications
+-   [`dacc-board`](apps/web-dashboard) - The repository housing the web application that is used to display the data from the `mobile-ctc` applications
+-   [`@elsa-health/emr`](packages/emr) - The repository housing the module that is used to business and storage logic for the `mobile-ctc` applications as well as the housing types that used across the projects / repositories (e.g. [`Patient`](/packages/emr/health.types/v1/personnel.d.ts#L15), [`MedicationRequest`](/packages/emr/health.types/v1/prescription.d.ts#L12), [`Visit`](/packages/emr/health.types/v1/visit.d.ts) types)
+
+To be able to make contributions to the different parts of the project you need to make use of the workspace commands made available by the packages manager (in our case, `yarn`) and make the installations accordingly.
+
+So to work with the `mobile-ctc` application you'll need to run:
 
 ```bash
-yarn w mobile-ctc android
+yarn workspace mobile-ctc android
 ```
 
-Then followed by
-
-```bash
-yarn w mobile-ctc start
-```
-
-#### EMR
-
-If you plan on making **development** on the EMR and have changes apply to the app, open a new terminal then run
-
-```bash
-yarn w @elsa-health/emr dev
-```
-
-With fast reloading on, frequest updates on the [`/packages/emr`](./packages/emr/) project might throw a `missing package` or `haste package related` error. You might want to instead to want to perform manual periodic builds yourself. To do that.
-
-```bash
-yarn w @elsa-health/emr build
-```
-
-#### Dacc Server
-
-When working on the Dacc server project as part of this repository (as opposed to individual development), Run
-
-```bash
-yarn w dacc-server dev
-```
-
-By default, this will expose a socket endpoint via port `5005`, to override, run
-
-```bash
-PORT=5678 yarn w dacc-server dev
-```
-
-To quickly be able to have the dacc-server properly communicate with the mobile application, you might want to forward the connection using something like [ngrok](https://ngrok.com/)
-
-## Contributing
-
-We love Open Source, appreciate contibutions from developers all around. See `CONTRIBUTING.md` for ways to get started.
-
-Please adhere to this project's `CODE_OF_CONDUCT.md`.
-
-## Feedback
-
-If you have any feedback, please share it in the Discussions
-using the `feedback` label or reach us out at info@elsa.health
+More on using workspace related commands see [Yarn workspaces](https://classic.yarnpkg.com/en/docs/cli/workspace)
