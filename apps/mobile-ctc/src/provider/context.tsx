@@ -34,7 +34,10 @@ export function ApplicationProvider({children}: {children: React.ReactNode}) {
           }),
         );
       })
-      .catch(err => console.warn('Error when logging in!'))
+      .catch(err => {
+        console.warn('Error when logging in!');
+        console.error(err);
+      })
       .finally(() => console.log('Completed!'));
   }, []);
 
@@ -160,7 +163,7 @@ type Selector<T> = (a: LoggedInContextState | null) => T;
 export function useAppState<T>(
   selector?: Selector<T>,
 ): typeof selector extends Selector<T> ? T : LoggedInContextState | null {
-  const [_originalState, dispatch] = React.useContext(AppContext);
+  const [_originalState, _dispatch] = React.useContext(AppContext);
 
   const state = React.useMemo(() => {
     if (selector !== undefined) {

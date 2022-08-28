@@ -133,13 +133,14 @@ export default function MedicationStockScreen({
   // const e = useWorkflowStore(s => s.value['reporting-stock'] || {});
   // console.log('TOOO');
 
+  const api = useWorkflowApi();
   const [report, set] = React.useState(
-    prepareReport(useWorkflowApi.getState().value['stock']),
+    prepareReport(api.getState().value['stock']),
   );
 
   React.useEffect(() => {
     // console.log('PING-PONG');
-    const unsubscribe = useWorkflowApi.subscribe(r => {
+    const unsubscribe = api.subscribe(r => {
       const stock = r?.value?.stock;
       if (stock === undefined) {
         return;

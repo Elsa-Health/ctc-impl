@@ -21,7 +21,7 @@ import {format, formatDistanceToNow} from 'date-fns';
 import _ from 'lodash';
 
 import {ctc} from '@elsa-health/emr';
-import {useWorkflowStore} from '../../workflow';
+import {useWorkflowApi, useWorkflowStore} from '../../workflow';
 import {FlashList} from '@shopify/flash-list';
 
 type ScreenProps = WorkflowScreenProps<
@@ -88,6 +88,7 @@ const prepareAvailableMedicationRequests = (
 };
 
 function MedicationDashboardScreen({actions: $}: ScreenProps) {
+  const api = useWorkflowApi();
   const {spacing, color} = useTheme();
   // const {
   //   value: medicaRequests,
@@ -98,14 +99,11 @@ function MedicationDashboardScreen({actions: $}: ScreenProps) {
   // });
 
   const [requests, set] = React.useState(
-    prepareAvailableMedicationRequests(
-      useWorkflowStore.getState().value['med.requests'],
-      $,
-    ),
+    prepareAvailableMedicationRequests(api.getState().value['med.requests'], $),
   );
 
   React.useEffect(() => {
-    const unsubscribe = useWorkflowStore.subscribe(x => {
+    const unsubscribe = api.subscribe(x => {
       set(prepareAvailableMedicationRequests(x.value['med.requests'], $));
     });
 
@@ -193,19 +191,20 @@ const singleMRqDispenseCheck = (
 };
 
 function MedicationRequestItem({data: d, onViewRequest}: Out) {
+  const api = useWorkflowApi();
   const [status, set] = React.useState<
     | {status: 'loading' | 'unfullfilled'; dispenseNotice: null}
     | {status: 'fullfilled'; dispenseNotice: ctc.MedicationDispense}
   >(() =>
     singleMRqDispenseCheck(
       d,
-      useWorkflowStore.getState().value['med.requests'],
-      useWorkflowStore.getState().value['med.dispenses'],
+      api.getState().value['med.requests'],
+      api.getState().value['med.dispenses'],
     ),
   );
 
   React.useEffect(() => {
-    const unsub = useWorkflowStore.subscribe(x => {
+    const unsub = api.subscribe(x => {
       set(
         singleMRqDispenseCheck(
           d,

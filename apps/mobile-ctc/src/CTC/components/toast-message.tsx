@@ -10,7 +10,7 @@ import {DefaultTypography as typo} from '@elsa-ui/react-native/theme';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {View} from 'react-native';
 
-const toastConfiguration: ToastConfig = {
+export const toastConfiguration: ToastConfig = {
   info: ({...props}) => (
     <BaseToast
       {...props}

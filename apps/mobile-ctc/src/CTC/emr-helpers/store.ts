@@ -1,21 +1,18 @@
 import {Module} from '@elsa-health/emr/lib/module';
-import {CollectionNode, Store} from 'papai/collection/core';
+import {Store} from 'papai/collection/core';
 
-import {Report, StockRecord} from '@elsa-health/emr/health.types/v1';
+import {StockRecord} from '@elsa-health/emr/health.types/v1';
 
 import {
-  clearCollection,
   collection,
   doc,
   getStore,
   onUpdateCollectionDocument,
   setDoc,
 } from 'papai/collection';
-import {Document} from 'papai/collection/types';
 import {HybridLogicalClock} from 'papai/distributed/clock';
 import {
   onTrackNewStoreChanges,
-  onTrackStoreAddUpdateChanges,
   StateTrackingBox,
 } from 'papai/distributed/store';
 import ItemStorageStore, {
@@ -30,7 +27,7 @@ import {CTC} from './types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // ... seed
 import {seedStock} from './seed';
-import {Message, StateToken} from '../actions/sync';
+import {Message} from '../actions/sync';
 import {ElsaProvider} from '../../provider/backend';
 
 // reference mapping the state to the values
@@ -79,6 +76,8 @@ export type PublicStock = {
   record: {medicationIdentifier: string; count: number; text: string};
 };
 
+// type DEV_Stock = StockRecord<CTC.ARVMedication, CTC.Organization>;
+
 /**
  * @param publicStore Store providing the data
  * @returns module to control the values
@@ -89,7 +88,7 @@ export const EMRModule = (
   provider: ElsaProvider,
 ) => {
   // This is the private storage to adress stock information
-  const stock = collection<StockRecord<CTC.ARVMedication, CTC.Organization>>(
+  const stock = collection<ctc.ARVStockRecord>(
     privateStore,
     'medication.stock',
   );
@@ -239,7 +238,7 @@ export async function Seeding(emr: EMRModule, org: CTC.Organization) {
 
     console.log('Seeding...');
     // run seed for stock + // then lock after first run
-    return seedStock(emr, org).then(v =>
+    return seedStock(emr.collection('stock'), org).then(() =>
       AsyncStorage.setItem(seedKey, JSON.stringify(true)),
     );
   });
@@ -252,6 +251,7 @@ export async function Seeding(emr: EMRModule, org: CTC.Organization) {
 
 import {addDoc} from 'papai/collection';
 import {CRDTState} from '../actions/socket';
+import {ctc} from '@elsa-health/emr';
 
 // set observable on document change
 const store = getStorage();
@@ -268,6 +268,7 @@ store.documentObservable.subscribe(function (val) {
 
 // sync up the stores
 export function onSnapshotUpdate(
+  store_: ReturnType<typeof getStorage>,
   provider: ElsaProvider,
   cb: (message: CRDTState) => void,
 ) {
@@ -276,14 +277,13 @@ export function onSnapshotUpdate(
     user: {uid: userId},
   } = provider.toJSON();
   return onTrackNewStoreChanges(
-    getStorage(),
+    store_,
     stateBox,
-    function (doc, state, clock) {
+    function (_doc, state, clock) {
       // ...
-      // console.log('Shout on change!');
       cb({
         type: 'crdt',
-        batch: [[doc, state, clock.toString()]],
+        batch: [[_doc, state, clock.toString()]],
         source: {facility: ctcCode, userId},
       });
     },

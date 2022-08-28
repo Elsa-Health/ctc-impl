@@ -21,7 +21,8 @@ describe('<ConnectionSync />', () => {
               session: {expiresAt: new Date(), expiresIn: 86400},
             })
           }
-          wsURL="<websocket-url>"
+          wsURL="ws://127.0.0.1"
+          // wsURL="<websocket-url>"
         />
         ,
       </WorkflowProvider>,

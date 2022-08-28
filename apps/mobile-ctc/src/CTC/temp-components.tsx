@@ -598,13 +598,19 @@ export function ControlDateInput({
             error={Boolean(fieldState.error)}
             style={{flex: 1, backgroundColor: '#FFF'}}
             mode={mode}
-            value={field.value}
-            onChangeText={field.onChange}
             placeholder="DD / MM / YYYY"
             keyboardType="numeric"
             render={props => (
               // @ts-ignore
-              <TextInputMask {...props} mask="[00] / [00] / [0000]" />
+              <TextInputMask
+                {...props}
+                value={field.value}
+                onChangeText={text => {
+                  props.onChangeText?.(text);
+                  field.onChange(text);
+                }}
+                mask="[00] / [00] / [0000]"
+              />
             )}
           />
           {fieldState.error && (

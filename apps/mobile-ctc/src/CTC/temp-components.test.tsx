@@ -1,5 +1,6 @@
 import {render} from '@testing-library/react-native';
 import React from 'react';
+import {useForm} from 'react-hook-form';
 import {
   Block,
   CollapsibleSection,
@@ -95,6 +96,14 @@ describe('Temporary Components', () => {
   });
   test('<ControlDateInput />', () => {
     // ...
-    render(<ControlDateInput />);
+    const C = function () {
+      const {control} = useForm();
+      return <ControlDateInput name="dateTime" control={control} />;
+    };
+    render(
+      <>
+        <C />
+      </>,
+    );
   });
 });

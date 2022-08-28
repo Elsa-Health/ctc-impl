@@ -5,7 +5,6 @@ import {session} from './helper';
 
 import {isBefore} from 'date-fns';
 import {ElsaDBTypes, ElsaTypes, Serialized, ProviderSession} from './@types';
-import {identity} from 'lodash';
 
 type Platform = 'ctc' | 'addo' | 'labs';
 type PlatformAction =
@@ -37,7 +36,7 @@ export async function authenticateCredential(
   // console.log('Profile exists... Pulling API key');
 
   // Getting information from profile
-  const {API_KEY, platform} = _profile.data() as ElsaDBTypes.Profile;
+  const {API_KEY} = _profile.data() as ElsaDBTypes.Profile;
 
   /** Fetch API information */
   const _api = await firestore.collection('API_KEYS').doc(API_KEY).get();
@@ -50,7 +49,7 @@ export async function authenticateCredential(
 
   // console.log('API Key pulled.. Pulling Credentials');
   // Information to validate what can be done by the user
-  const {actions, platforms} = _api.data() as ElsaDBTypes.ApiKey;
+  const {platforms} = _api.data() as ElsaDBTypes.ApiKey;
 
   const cred = await profileRef
     .collection('credentials')
@@ -104,7 +103,7 @@ export async function authenticateProvider(
   // console.log('Profile exists... Pulling API key');
 
   // Getting information from profile
-  const {API_KEY, platform} = _profile.data() as ElsaDBTypes.Profile;
+  const {API_KEY} = _profile.data() as ElsaDBTypes.Profile;
 
   /** Fetch API information */
   const _api = await firestore.collection('API_KEYS').doc(API_KEY).get();
@@ -340,13 +339,13 @@ export class ElsaProvider {
 }
 export type Identity = {profileId: string; credentialId: string};
 
-const Identity = ({
+export function Identity({
   profileId,
   credentialId,
 }: {
   profileId: string;
   credentialId: string;
-}) => {
+}) {
   if (!profileId || !credentialId) {
     throw new Error('Invalid Identity');
   }
@@ -363,7 +362,7 @@ const Identity = ({
     profileId,
     credentialId,
   };
-};
+}
 
 Identity.isParsable = (str: string) => {
   return str.match(/[a-zA-Z0-9_-]@[a-zA-Z0-9_-]/g) !== null;
@@ -392,6 +391,7 @@ Identity.parse = (identityString: string): Identity => {
   // 	return { profileId: vals[0] };
   // }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [profileId, credentialId, ..._] = vals;
   return {profileId, credentialId};
 };

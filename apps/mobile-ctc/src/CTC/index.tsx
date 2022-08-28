@@ -45,7 +45,7 @@ import {
 import * as Sentry from '@sentry/react-native';
 import {convertDMYToDate, removeWhiteSpace} from './emr-helpers/utils';
 import {format, isAfter} from 'date-fns';
-import {getEMR, Seeding} from './emr-helpers/store';
+import {getCrdtCollection, getEMR, Seeding} from './emr-helpers/store';
 import {
   AppointmentRequest,
   Ingredient,
@@ -295,6 +295,7 @@ function App({
           __DEV__ ? 'f7ca-197-250-61-138.eu.ngrok.io' : 'bounce-edge.fly.dev'
         }/ws/crdt/state`}
         provider={provider}
+        crdtCollection={getCrdtCollection()}
       />
       <Stack.Navigator
         initialRouteName="ctc.dashboard"

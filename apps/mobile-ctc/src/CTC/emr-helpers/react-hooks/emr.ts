@@ -10,7 +10,7 @@ import {format} from 'date-fns';
 import {date} from '@elsa-health/emr/lib/utils';
 import {SingleStockItem} from '../../screens/MedicationStock';
 import {ctc} from '@elsa-health/emr';
-import {useWorkflowStore} from '../../workflow';
+import {useWorkflowApi, useWorkflowStore} from '../../workflow';
 
 import {Document} from 'papai/collection/types';
 import produce from 'immer';
@@ -46,7 +46,8 @@ export function useListenCollection<
   K extends string,
   C extends CollectionNode<Document.Data>,
 >(key: K, collection: C) {
-  const set = React.useCallback(useWorkflowStore.getState().setValue, []);
+  const api = useWorkflowApi();
+  const set = React.useCallback(api.getState().setValue, []);
 
   // initial read
   React.useEffect(() => {
@@ -139,9 +140,10 @@ export function useAttachStockListener(
   reportStockKey: string,
   // stockCollection: any,
 ) {
-  const set = useWorkflowStore.getState().setValue;
+  const api = useWorkflowApi();
+  const set = api.getState().setValue;
   React.useEffect(() => {
-    const unsubscribe = useWorkflowStore.subscribe(r => {
+    const unsubscribe = api.subscribe(r => {
       set(s =>
         produce(s, df => {
           const stock = df.stock;
@@ -255,22 +257,21 @@ export type Appointment = {
 );
 
 export function useAttachAppointmentsListener() {
-  const set = React.useCallback(useWorkflowStore.getState().setValue, []);
+  const api = useWorkflowApi();
+  const set = React.useCallback(api.getState().setValue, []);
 
-  // const apptResps = useWorkflowStore.getState().value['appointment-responses'];
-  // const apptRqs = useWorkflowStore.getState().value['appointment-requests'];
+  // const apptResps = api.getState().value['appointment-responses'];
+  // const apptRqs = api.getState().value['appointment-requests'];
 
   const apptRespsRef = React.useRef(
-    useWorkflowStore.getState().value['appointment-responses'],
+    api.getState().value['appointment-responses'],
   );
-  const apptRqsRef = React.useRef(
-    useWorkflowStore.getState().value['appointment-requests'],
-  );
+  const apptRqsRef = React.useRef(api.getState().value['appointment-requests']);
 
   // Connect to the store on mount, disconnect on unmount, catch state-changes in a reference
   React.useEffect(
     () =>
-      useWorkflowStore.subscribe(state => {
+      api.subscribe(state => {
         apptRespsRef.current = state.value['appointment-responses'];
         apptRqsRef.current = state.value['appointment-requests'];
       }),

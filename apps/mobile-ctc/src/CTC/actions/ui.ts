@@ -1,4 +1,4 @@
-import {type ctc} from '@elsa-health/emr';
+import * as ctc from '@elsa-health/emr/lib/ctc/ctc.types';
 import {query} from 'papai/collection';
 import {CollectionNode} from 'papai/collection/core';
 import {lower, removeWhiteSpace} from '../emr-helpers/utils';
@@ -9,9 +9,10 @@ export async function queryPatientsFromSearch<T>(
   searchQuery: SearchQuery,
   item: (p: ctc.Patient) => T,
 ) {
-  const orQueries: Array<(p: CTC.Patient) => boolean> = [];
-  const {input, searchIn} = searchQuery;
-  if (input !== undefined) {
+  const orQueries: Array<(p: ctc.Patient) => boolean> = [];
+  const {input: preFormatInput, searchIn} = searchQuery;
+  if (preFormatInput !== undefined) {
+    const input = preFormatInput.trim().toLowerCase();
     // add function to search ID
     orQueries.push(p => {
       //  search in ID
@@ -39,7 +40,7 @@ export async function queryPatientsFromSearch<T>(
 
     // search phoneNumber
     if (searchIn?.phone) {
-      console.log('Phone Q');
+      // console.log('Phone Q');
       orQueries.push(p => {
         const phoneNumber = p.contact?.phoneNumber ?? '';
         return removeWhiteSpace(phoneNumber).includes(removeWhiteSpace(input));

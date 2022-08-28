@@ -79,12 +79,13 @@ export function MedicationStatusComponent({
   // medication to observe the status
   medication: ctc.ARVMedication;
 }) {
+  const api = useWorkflowApi();
   const [stockStatus, set] = React.useState(() =>
-    checkStockStatus(medication, useWorkflowApi.getState().value[WF_STOCK_KEY]),
+    checkStockStatus(medication, api.getState().value[WF_STOCK_KEY]),
   );
 
   React.useEffect(() => {
-    const unsub = useWorkflowApi.subscribe(sx => {
+    const unsub = api.subscribe(sx => {
       set(checkStockStatus(medication, sx.value[WF_STOCK_KEY]));
     });
 

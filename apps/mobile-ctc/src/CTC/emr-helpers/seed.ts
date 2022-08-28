@@ -1,4 +1,4 @@
-import {Ingredient, Medication, Stock} from '@elsa-health/emr';
+import {ctc, Ingredient, Medication, Stock} from '@elsa-health/emr';
 import {ARV, CTC as eCTC} from 'elsa-health-data-fns/lib';
 
 import {CTC} from './types';
@@ -8,6 +8,7 @@ import _ from 'lodash';
 import {getDocs, setDocs} from 'papai/collection';
 import {EMRModule} from './store';
 import {concat} from '@elsa-health/emr/lib/utils';
+import {CollectionNode} from 'papai/collection/core';
 
 /**
  * Where inforamtion is initiated
@@ -66,15 +67,17 @@ export const stock = (org: CTC.Organization) =>
   });
 
 /// seeds only those medications that haven't been created for
-export const seedStock = async (emr: EMRModule, org: CTC.Organization) => {
-  const stockColl = emr.collection('stock');
-
+export const seedStock = async (
+  stockColl: CollectionNode<ctc.ARVStockRecord>,
+  org: CTC.Organization,
+) => {
+  // pull list if seeding has happened before
   const s = (await getDocs(stockColl)).map(d => d[1].medication);
-  console.log(s);
+  // console.log(s);
   await setDocs(
     stockColl,
     stock(org)
-      .filter(d => s.findIndex(x => _.isEqual(x, d)) === -1)
+      .filter(d => s.findIndex(x => _.isEqual(x, d.medication)) === -1)
       .map(d => [d.id, d]),
   );
 };

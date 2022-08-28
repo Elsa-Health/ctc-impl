@@ -1,30 +1,14 @@
-import {session} from './helper';
-import {ElsaProvider, Identity} from './backend';
-
-describe('Context', () => {
-  //   test('', () => {
-  //     /// ...
-  //   });
-});
-
-describe('helper.ts', () => {
-  test('session()', () => {
-    expect(session({type: 'default'})).toBeDefined();
-    expect(session({type: 'short'})).toBeDefined();
-    expect(
-      session({type: 'custom', expiresAt: new Date(), expiresIn: 34000}),
-    ).toBeDefined();
-  });
-});
+import {authenticateProvider, ElsaProvider, Identity} from './backend';
 
 describe('backend', () => {
-  //   test('authenticateProvider()', () => {
-  //     // ...
-  //   });
+  // test('authenticateProvider()', async () => {
+  //   // ...
+  //   authenticateProvider();
+  // });
 
-  //   test('authenticateCredential()', () => {
-  //     // ...
-  //   });
+  // test('authenticateCredential()', () => {
+  //   // ...
+  // });
 
   test('ElsaProvider', () => {
     const elsa_provider = new ElsaProvider({

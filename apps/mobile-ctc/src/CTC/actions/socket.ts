@@ -57,7 +57,7 @@ export function handleCRDTData(data: StateMessage, cb?: (err?: Error) => any) {
 }
 
 const initValue = z.union([
-  CRDTState.pick({type: true}),
+  StateMessage.pick({type: true}),
   StockState.pick({type: true}),
 ]);
 
@@ -67,14 +67,14 @@ const initValue = z.union([
  */
 export function syncContentsFromSocket(data: any) {
   // usable?
-  const usable = initValue.parse(data);
+  // const usable = initValue.parse(data);
 
-  if (usable.type === 'stock') {
+  if (data.type === 'stock') {
     handleStockData(StockState.parse(data));
     return;
   }
 
-  if (usable.type === 'crdt') {
+  if (data.type === 'crdt') {
     handleCRDTData(StateMessage.parse(data));
     return;
   }
@@ -83,8 +83,10 @@ export function syncContentsFromSocket(data: any) {
   throw new Error("You shouldn't even see this. If you can, 503 error");
 }
 
-const crdtCollection = getCrdtCollection();
-export async function fetchCRDTMessages(provider: ElsaProvider) {
+export async function fetchCRDTMessages(
+  provider: ElsaProvider,
+  crdtCollection: ReturnType<typeof getCrdtCollection>,
+) {
   const d = await getDocs(crdtCollection);
 
   if (d.length === 0) {
