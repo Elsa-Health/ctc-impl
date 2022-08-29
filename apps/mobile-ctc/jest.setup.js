@@ -15,6 +15,42 @@ jest.mock('@react-navigation/native', () => ({
   }),
 }));
 
+/**
+ * Firebase
+ * -----------
+ */
+jest.mock('@react-native-firebase/firestore', () => {
+  return () => ({});
+});
+
+// jest.mock('@react-native-firebase/messaging', () => {
+//   const messagingModule = () => ({
+//     getToken: jest.fn(() => Promise.resolve('myMockToken')),
+//     setBackgroundMessageHandler: jest.fn(),
+//     onMessage: jest.fn(),
+//     requestPermission: jest.fn(),
+//     onNotificationOpenedApp: jest.fn(),
+//   });
+//   messagingModule.AuthorizationStatus = {
+//     NOT_DETERMINED: -1,
+//     DENIED: 0,
+//     AUTHORIZED: 1,
+//     PROVISIONAL: 2,
+//   };
+//   return messagingModule;
+// });
+
+jest.mock('@react-native-firebase/analytics', () => {
+  return () => ({
+    logEvent: jest.fn(),
+    setUserProperties: jest.fn(),
+    setUserId: jest.fn(),
+    setCurrentScreen: jest.fn(),
+  });
+});
+
+/** ------------------- */
+
 jest.mock('react-native-paper', () => {
   return {
     ...jest.requireActual('react-native-paper'),

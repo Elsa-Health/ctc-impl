@@ -8,7 +8,7 @@ import {ElsaProvider} from '../../../provider/backend';
 
 jest.mock('react-native-qrcode-scanner', () => {
   return {
-    default: ({props}: any) => <></>,
+    default: jest.fn().mockImplementation(() => <></>),
   };
 });
 
