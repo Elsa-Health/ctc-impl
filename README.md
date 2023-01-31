@@ -50,24 +50,27 @@ To be able to build the project on your successfully on your end. You'll need:
 
 ### Installation
 
+After `git` cloning this project. Make sure to import the content of the submoules using:
+
+```bash
+git submodule update --init --recursive
+```
+
 After acquiring the above requirements, and make the appropriate configurations for each application (like setting `export ANDROID_SDK_ROOT=`), navigate to the project folder throught the terminal and install the project by running:
 
 ```bash
 yarn install
 ```
 
-That's really it!
-
 ### Structure
 
 The project is a [Mono-repository (monorepo)](https://en.wikipedia.org/wiki/Monorepo) created with [Turborepo](https://turborepo.org/). Making it easier to house and work with the different building blocks that make up the entire project.
 
-The project is split into 4 repositories:
+The project is split into 3 repositories:
 
 -   [`mobile-ctc`](/apps/mobile-ctc) - The main repository housing the mobile application that is used by the health care providers to interact with the system
 -   [`dacc-server`](/apps/dacc-server)- The repository housing the server that is used to sync the data between different `mobile-ctc` applications
--   [`dacc-board`](apps/web-dashboard) - The repository housing the web application that is used to display the data from the `mobile-ctc` applications
--   [`@elsa-health/emr`](packages/emr) - The repository housing the module that is used to business and storage logic for the `mobile-ctc` applications as well as the housing types that used across the projects / repositories (e.g. [`Patient`](/packages/emr/health.types/v1/personnel.d.ts#L15), [`MedicationRequest`](/packages/emr/health.types/v1/prescription.d.ts#L12), [`Visit`](/packages/emr/health.types/v1/visit.d.ts) types)
+-   [`@elsa-health/emr`](packages/emr) - The repository housing the module that is used to business and storage logic for the `mobile-ctc` applications as well as the housing types that used across the projects / repositories (e.g. [`Patient`](/packages/emr/health.types/v1/personnel.d.ts#L15), [`MedicationRequest`](/packages/emr/health.types/v1/prescription.d.ts#L12), [`Visit`](/packages/emr/health.types/v1/visit.d.ts#L7) types)
 
 To be able to make contributions to the different parts of the project you need to make use of the workspace commands made available by the packages manager (in our case, `yarn`) and make the installations accordingly.
 
