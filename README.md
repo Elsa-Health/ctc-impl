@@ -50,17 +50,20 @@ To be able to build the project on your successfully on your end. You'll need:
 
 ### Installation
 
-After `git` cloning this project. Make sure to import the content of the submoules using:
+1. After `git` cloning this project. Make sure to import the content of the submoules using:
 
-```bash
-git submodule update --init --recursive
-```
+    ```bash
+    git submodule update --init --recursive
+    ```
 
-After acquiring the above requirements, and make the appropriate configurations for each application (like setting `export ANDROID_SDK_ROOT=`), navigate to the project folder throught the terminal and install the project by running:
+2. After acquiring the above requirements, and make the appropriate configurations for each application (like setting `export ANDROID_SDK_ROOT=`), navigate to the project folder throught the terminal and install the project by running:
 
-```bash
-yarn install
-```
+    ```bash
+    yarn install
+    yarn build
+    ```
+
+3. We are using a firebase project to store information over there. So you should include your own `google-service.json` in the `mobile-ctc/android/app`.
 
 ### Structure
 
@@ -72,7 +75,8 @@ The project is split into 3 repositories:
 -   [`dacc-server`](/apps/dacc-server)- The repository housing the server that is used to sync the data between different `mobile-ctc` applications
 -   [`@elsa-health/emr`](packages/emr) - The repository housing the module that is used to business and storage logic for the `mobile-ctc` applications as well as the housing types that used across the projects / repositories (e.g. [`Patient`](/packages/emr/health.types/v1/personnel.d.ts#L15), [`MedicationRequest`](/packages/emr/health.types/v1/prescription.d.ts#L12), [`Visit`](/packages/emr/health.types/v1/visit.d.ts#L7) types)
 
-To be able to make contributions to the different parts of the project you need to make use of the workspace commands made available by the packages manager (in our case, `yarn`) and make the installations accordingly.
+To be able to make contributions to the different parts of the project you need to make use of the workspace commands made available by the packages
+manager (in our case, `yarn`) and make the installations accordingly.
 
 So to work with the `mobile-ctc` application you'll need to run:
 
