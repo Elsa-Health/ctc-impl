@@ -1,4 +1,4 @@
-import {buildWorkflowStore, WorkflowNavigator} from '../workflows';
+import { buildWorkflowStore, WorkflowNavigator } from '../workflows';
 
 import DashboardScreen from './screens/Dashboard';
 import PatientDashboard from './screens/PatientDashboard';
@@ -26,8 +26,8 @@ import MedicationRequestScreen from './screens/MedicationRequest';
 import MedicationVisit from './screens/MedicationVisit';
 import MedicationStock from './screens/MedicationStock';
 import * as ctc from '@elsa-health/emr/lib/ctc/ctc.types';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {List} from 'immutable';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { List } from 'immutable';
 
 // These are all the pages to navigate to
 export type WorkflowParamList = WorkflowNavigator<{
@@ -42,9 +42,9 @@ export type WorkflowParamList = WorkflowNavigator<{
   'ctc.medication-map': typeof MedicationMapScreen;
   'ctc.report-summary': typeof ReportSummaryScreen;
   'ctc.medication-visit': typeof MedicationVisit<
-    ctc.Patient,
-    ctc.Visit,
-    ctc.Organization
+  ctc.Patient,
+  ctc.Visit,
+  ctc.Organization
   >;
   'ctc.medication-stock': typeof MedicationStock;
   'ctc.register-new-patient': typeof RegisterNewPatientScreen;
@@ -57,7 +57,7 @@ export type WorkflowParamList = WorkflowNavigator<{
 }>;
 
 // Setup the application
-const {WorkflowProvider, useWorkflowStore, useWorkflowApi} =
+const { WorkflowProvider, useWorkflowStore, useWorkflowApi } =
   buildWorkflowStore<{
     appointments: List<any>;
     visits: List<ctc.Visit>;
@@ -71,6 +71,6 @@ const {WorkflowProvider, useWorkflowStore, useWorkflowApi} =
 const Stack = createNativeStackNavigator<WorkflowParamList>();
 
 // Something here
-export {WorkflowProvider, Stack, useWorkflowStore, useWorkflowApi};
+export { WorkflowProvider, Stack, useWorkflowStore, useWorkflowApi };
 
 // start

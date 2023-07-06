@@ -243,7 +243,7 @@ function App({
   // setting up the values on the pages
   React.useEffect(() => {
     // console.log('SHOUT');
-    useWorkflowStore.getState().setValue(s =>
+    useWorkflowStore?.getState?.().setValue(s =>
       produce(s, df => {
         df.provider = provider.toJSON();
         df.appVersion = appVersion;

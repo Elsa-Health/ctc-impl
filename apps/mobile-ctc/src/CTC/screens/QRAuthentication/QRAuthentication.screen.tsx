@@ -275,6 +275,7 @@ export default function QRAuthenticationScreen({
                     mode="outlined"
                     onPress={() =>
                       // auth login
+                      // set('au7bWJxa6Fm8f4WrgzjA@eSvC9RRrsqBiIW3CYddJ')
                       set('JWVHbExokY0mXsRcabAg@C9U3KgCvUof410gynImJ')
                     }>
                     Dev Login

@@ -86,11 +86,12 @@ const facilities: Facility[] = [
   },
 ];
 
-const facilityCodeMap: {[fid: string]: Facility} = {};
+const facilityCodeMap: { [fid: string]: Facility } = {};
 facilities.forEach(facility => {
   facilityCodeMap[facility.facilityCode] = facility;
 });
 
 export const getFacilityFromCode = (facilityCode: string): Facility | null => {
-  return facilityCodeMap[facilityCode] ?? null;
+  return facilityCodeMap[facilityCode] ?? facilities.find(f => f.uid === facilityCode) ?? null;
 };
+
